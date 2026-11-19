@@ -25,10 +25,12 @@ def login():
         return jsonify(error="invalid_credentials"), 401
     membership = next((m for m in memberships if m.school_id is None), memberships[0])
     session.clear()
+    if len(memberships) == 1:
+        session["membership_id"] = memberships[0].id
     session["user_id"] = user.id
     session["tenant_id"] = tenant_id
     session["csrf_token"] = __import__("secrets").token_urlsafe(32)
-    return jsonify(user={"id": user.id, "email": user.email}, role=membership.role, tenant_id=tenant_id, csrf_token=session["csrf_token"])
+    return jsonify(user={"id": user.id, "email": user.email}, role=membership.role, tenant_id=tenant_id, csrf_token=session["csrf_token"], memberships=[{"id": m.id, "role": m.role, "school_id": m.school_id} for m in memberships])
 
 @api.post("/auth/logout")
 def logout():
