@@ -23,6 +23,11 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
  const [accounts,setAccounts]=useState<{id:string;email:string;role:string;school_id:string|null}[]>([]);
  const [schools,setSchools]=useState<{id:string;name:string}[]>([]);
  const [form,setForm]=useState({email:"",password:"",role:"teacher",school_id:"",record_id:""});
+ const [studentOptions,setStudentOptions]=useState<{id:string;full_name:string;student_code:string}[]>([]);
+ const [teacherOptions,setTeacherOptions]=useState<{id:string;full_name:string;employee_code:string}[]>([]);
+ const [guardianMembership,setGuardianMembership]=useState("");
+ const [linkedStudent,setLinkedStudent]=useState("");
+ const [feedback,setFeedback]=useState("");
  const [busy,setBusy]=useState(false);
  const [needsSelection,setNeedsSelection]=useState(false);
  useEffect(()=>{api.me().then(async s=>{setSession(s);onRole?.(s.role);try {const c=await api.portalContext();setMembers(c.memberships);setSchools(c.schools);}catch{setNeedsSelection(true);}}).catch(()=>{}).finally(()=>setLoading(false));},[]);
@@ -32,6 +37,11 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
   if(["teacher","student"].includes(session.role))api.myProfile().then(setProfile).catch(()=>{});
   if(page==="accounts"&&["owner","principal"].includes(session.role))api.accounts().then(r=>setAccounts(r.items)).catch(()=>{});
  },[session,page]);
+ useEffect(()=>{
+  if(!session || !form.school_id || !["owner","principal"].includes(session.role)) {setStudentOptions([]);setTeacherOptions([]);return;}
+  api.schoolStudents(form.school_id).then(r=>setStudentOptions(r.items)).catch(()=>setStudentOptions([]));
+  api.schoolTeachers(form.school_id).then(r=>setTeacherOptions(r.items)).catch(()=>setTeacherOptions([]));
+ },[session,form.school_id]);
  async function login(e:React.FormEvent) {
   e.preventDefault();setBusy(true);setError("");
   try{
@@ -49,7 +59,7 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
  }
  async function addAccount(e:React.FormEvent) {
   e.preventDefault();setBusy(true);setError("");
-  try {await api.createAccount(form);setAccounts((await api.accounts()).items);setForm({...form,email:"",password:"",record_id:""});}
+  try {await api.createAccount(form);setAccounts((await api.accounts()).items);setForm({...form,email:"",password:"",record_id:""});setFeedback("تم إنشاء الحساب وربطه بالمدرسة.");}
   catch(e){setError(e instanceof Error?e.message:"تعذر إنشاء الحساب");}finally{setBusy(false);}
  }
  if(loading)return <section className="live-panel">جاري التحقق من الجلسة...</section>;
@@ -73,7 +83,7 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
   {!permitted?<section className="live-panel"><h2>غير مصرح</h2><p>هذه الصفحة غير متاحة لدورك الحالي. اختر صفحة مسموحة من القائمة.</p></section>:
   role==="parent"?<section className="live-panel"><h2>أبنائي</h2><p>الطلبة المرتبطون بحساب ولي الأمر فقط</p>{children.length?<div className="table-wrap"><table><thead><tr><th>الطالب</th><th>الرقم المدرسي</th></tr></thead><tbody>{children.map(c=><tr key={c.id}><td>{c.full_name}</td><td>{c.student_code}</td></tr>)}</tbody></table></div>:<p>لا يوجد أبناء مرتبطون بحسابك بعد.</p>}</section>:
   ["student","teacher"].includes(role)?<section className="live-panel"><h2>{role==="student"?"بوابة الطالب":"بوابة المدرس"}</h2>{profile?<><h3>{profile.name}</h3><p>الرقم: {profile.code}</p></>:<p>لم يتم ربط الحساب بسجل {role==="student"?"الطالب":"المدرس"} بعد.</p>}<p>الجداول والواجبات والدرجات ستظهر هنا بعد تفعيل وحداتها الخلفية.</p></section>:
-  page==="accounts"&&["owner","principal"].includes(role)?<section className="live-panel"><h2>حسابات المستخدمين والصلاحيات</h2><div className="table-wrap"><table><thead><tr><th>البريد</th><th>الدور</th><th>المدرسة</th></tr></thead><tbody>{accounts.map(a=><tr key={a.id}><td>{a.email}</td><td>{names[a.role]||a.role}</td><td>{schools.find(s=>s.id===a.school_id)?.name||a.school_id||"المؤسسة"}</td></tr>)}</tbody></table></div><form className="live-form" onSubmit={addAccount}><h3>إنشاء حساب</h3><label>البريد الإلكتروني<input type="email" required value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label><label>كلمة مرور مؤقتة (12 حرفاً على الأقل)<input type="password" minLength={12} required value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/></label><label>الدور<select value={form.role} onChange={e=>setForm({...form,role:e.target.value})}>{["principal","registrar","teacher","student","parent"].map(r=><option key={r} value={r}>{names[r]}</option>)}</select></label><label>المدرسة<select required value={form.school_id} onChange={e=>setForm({...form,school_id:e.target.value})}><option value="">اختر مدرسة</option>{schools.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>{["teacher","student","parent"].includes(form.role)&&<label>معرف سجل {form.role==="teacher"?"المدرس":"الطالب"} {form.role!=="parent"?"(مطلوب)":"(اختياري)"}<input required={form.role!=="parent"} value={form.record_id} onChange={e=>setForm({...form,record_id:e.target.value})}/></label>}<button disabled={busy}>إنشاء الحساب</button></form></section>:
+  page==="accounts"&&["owner","principal"].includes(role)?<section className="live-panel"><h2>حسابات المستخدمين والصلاحيات</h2><div className="table-wrap"><table><thead><tr><th>البريد</th><th>الدور</th><th>المدرسة</th></tr></thead><tbody>{accounts.map(a=><tr key={a.id}><td>{a.email}</td><td>{names[a.role]||a.role}</td><td>{schools.find(s=>s.id===a.school_id)?.name||a.school_id||"المؤسسة"}</td></tr>)}</tbody></table></div><form className="live-form" onSubmit={addAccount}><h3>إنشاء حساب</h3><label>البريد الإلكتروني<input type="email" required value={form.email} onChange={e=>setForm({...form,email:e.target.value})}/></label><label>كلمة مرور مؤقتة (12 حرفاً على الأقل)<input type="password" minLength={12} required value={form.password} onChange={e=>setForm({...form,password:e.target.value})}/></label><label>الدور<select value={form.role} onChange={e=>setForm({...form,role:e.target.value})}>{["principal","registrar","teacher","student","parent"].map(r=><option key={r} value={r}>{names[r]}</option>)}</select></label><label>المدرسة<select required value={form.school_id} onChange={e=>setForm({...form,school_id:e.target.value})}><option value="">اختر مدرسة</option>{schools.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>{["teacher","student","parent"].includes(form.role)&&<label>{form.role==="teacher"?"المدرس المرتبط":"الطالب المرتبط"} {form.role!=="parent"?"(مطلوب)":"(اختياري)"}<select required={form.role!=="parent"} value={form.record_id} onChange={e=>setForm({...form,record_id:e.target.value})}><option value="">اختر من سجلات المدرسة</option>{(form.role==="teacher"?teacherOptions:studentOptions).map(item=><option key={item.id} value={item.id}>{item.full_name} — {"student_code" in item?item.student_code:item.employee_code}</option>)}</select></label>}<button disabled={busy}>إنشاء الحساب</button></form><form className="live-form" onSubmit={async e=>{e.preventDefault();setBusy(true);setError("");try{await api.linkGuardian(guardianMembership,linkedStudent);setFeedback("تم ربط الطالب بولي الأمر بنجاح.");setLinkedStudent("");}catch(e){setError(e instanceof Error?e.message:"تعذر الربط");}finally{setBusy(false);}}}><h3>ربط ابن إضافي بولي الأمر</h3><label>حساب ولي الأمر<select required value={guardianMembership} onChange={e=>setGuardianMembership(e.target.value)}><option value="">اختر ولي الأمر</option>{accounts.filter(a=>a.role==="parent").map(a=><option key={a.id} value={a.id}>{a.email}</option>)}</select></label><label>الطالب<select required value={linkedStudent} onChange={e=>setLinkedStudent(e.target.value)}><option value="">اختر الطالب</option>{studentOptions.map(s=><option key={s.id} value={s.id}>{s.full_name} — {s.student_code}</option>)}</select></label><button disabled={busy}>ربط الطالب</button></form>{feedback&&<p role="status">{feedback}</p>}</section>:
   <AcademicWorkspace page={page} authenticatedSession={session}/>}
  </div>;
 }
