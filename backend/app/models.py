@@ -151,3 +151,43 @@ class AttendanceRecord(db.Model):
         db.UniqueConstraint("school_id", "student_id", "day", name="uq_attendance_school_student_day"),
         db.CheckConstraint("status IN ('present','absent','late','excused')", name="ck_attendance_status"),
     )
+
+class Subject(db.Model):
+    __tablename__ = "subjects"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    tenant_id = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
+    school_id = db.Column(db.String(36), db.ForeignKey("schools.id"), nullable=False, index=True)
+    name = db.Column(db.String(150), nullable=False)
+    __table_args__ = (db.UniqueConstraint("school_id","name",name="uq_subject_school_name"),)
+
+class TeachingAssignment(db.Model):
+    __tablename__ = "teaching_assignments"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    tenant_id = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
+    school_id = db.Column(db.String(36), db.ForeignKey("schools.id"), nullable=False, index=True)
+    section_id = db.Column(db.String(36), db.ForeignKey("class_sections.id"), nullable=False)
+    teacher_id = db.Column(db.String(36), db.ForeignKey("teachers.id"), nullable=False)
+    subject_id = db.Column(db.String(36), db.ForeignKey("subjects.id"), nullable=False)
+    __table_args__ = (db.UniqueConstraint("section_id","subject_id",name="uq_assignment_section_subject"),)
+
+class TimetableEntry(db.Model):
+    __tablename__ = "timetable_entries"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    tenant_id = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
+    school_id = db.Column(db.String(36), db.ForeignKey("schools.id"), nullable=False, index=True)
+    assignment_id = db.Column(db.String(36), db.ForeignKey("teaching_assignments.id"), nullable=False)
+    weekday = db.Column(db.Integer, nullable=False)
+    period = db.Column(db.Integer, nullable=False)
+    __table_args__ = (db.UniqueConstraint("assignment_id","weekday","period",name="uq_timetable_assignment_slot"),db.CheckConstraint("weekday BETWEEN 0 AND 6"),db.CheckConstraint("period BETWEEN 1 AND 12"))
+
+class GradeRecord(db.Model):
+    __tablename__ = "grade_records"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    tenant_id = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
+    school_id = db.Column(db.String(36), db.ForeignKey("schools.id"), nullable=False, index=True)
+    student_id = db.Column(db.String(36), db.ForeignKey("students.id"), nullable=False, index=True)
+    assignment_id = db.Column(db.String(36), db.ForeignKey("teaching_assignments.id"), nullable=False)
+    assessment = db.Column(db.String(100), nullable=False)
+    score = db.Column(db.Float, nullable=False)
+    max_score = db.Column(db.Float, nullable=False)
+    __table_args__ = (db.UniqueConstraint("student_id","assignment_id","assessment",name="uq_grade_student_assessment"),db.CheckConstraint("score >= 0"),db.CheckConstraint("max_score > 0"))
