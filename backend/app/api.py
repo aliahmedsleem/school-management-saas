@@ -68,3 +68,22 @@ def create_school():
 def subscription():
     record = db.session.scalar(select(Subscription).where(Subscription.tenant_id == g.tenant_id).order_by(Subscription.starts_at.desc()))
     return jsonify(subscription=None if record is None else {"id": record.id, "status": record.status, "plan_id": record.plan_id})
+
+@api.get("/auth/pending")
+def pending_membership():
+    """Restore the membership picker without granting any role permissions."""
+    user_id, tenant_id = session.get("user_id"), session.get("tenant_id")
+    if not user_id or not tenant_id:
+        return jsonify(error="authentication_required"), 401
+    user = db.session.get(User, user_id)
+    if not user or not user.is_active:
+        return jsonify(error="forbidden"), 403
+    memberships = db.session.scalars(select(Membership).where(
+        Membership.user_id == user_id, Membership.tenant_id == tenant_id
+    )).all()
+    if not memberships:
+        return jsonify(error="forbidden"), 403
+    return jsonify(user={"id":user.id,"email":user.email},tenant_id=tenant_id,
+                   memberships=[{"id":m.id,"role":m.role,"school_id":m.school_id} for m in memberships],
+                   selection_required=len(memberships)>1 and not session.get("membership_id"),
+                   csrf_token=session.get("csrf_token"))
