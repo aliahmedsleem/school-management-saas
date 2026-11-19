@@ -25,7 +25,7 @@ export default function LearningPanel({role,schools}:{role:string;schools:{id:st
  const editor=["owner","principal","registrar"].includes(role);
  const canAssign=["owner","principal"].includes(role);
  useEffect(()=>{if(!school&&schools.length)setSchool(schools[0].id)},[schools,school]);
- async function refresh(){if(!school)return;try{setCatalog(await api.learningCatalog(school));const [a,b,c]=await Promise.all([api.academics("sections",school),api.schoolTeachers(school),api.schoolStudents(school)]);setSections(a.items.map(x=>({id:x.id,name:String(x.name||x.id)})));setTeachers(b.items);setStudents(c.items);}catch(e){setMessage(e instanceof Error?e.message:"تعذر جلب البيانات")}}
+ async function refresh(){if(!school)return;try{setCatalog(await api.learningCatalog(school));const [a,b,c]=await Promise.all([api.list("sections",school),api.schoolTeachers(school),api.schoolStudents(school)]);setSections(a.items.map(x=>({id:x.id,name:String(x.name||x.id)})));setTeachers(b.items);setStudents(c.items);}catch(e){setMessage(e instanceof Error?e.message:"تعذر جلب البيانات")}}
  useEffect(()=>{if(editor)refresh();else api.learningMine().then(setMine).catch(e=>setMessage(e instanceof Error?e.message:"تعذر جلب البيانات"));},[school,role]);
  async function submit(fn:()=>Promise<unknown>){setBusy(true);setMessage("");try{await fn();setMessage("تم الحفظ بنجاح");await refresh()}catch(e){setMessage(e instanceof Error?e.message:"تعذر الحفظ")}finally{setBusy(false)}}
  const label=(text:string,control:React.ReactNode)=><label>{text}{control}</label>;
