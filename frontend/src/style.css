@@ -93,3 +93,13 @@ input,textarea,select{line-height:1.5}
 .owner-actions button:hover{background:#edf2f9}
 @media(max-width:900px){.owner-columns{grid-template-columns:1fr}}
 @media(max-width:650px){.owner-intro{padding:20px;align-items:flex-start;flex-direction:column}.owner-stats{grid-template-columns:1fr}.owner-actions{grid-template-columns:1fr 1fr}}
+
+/* Workspace header: no redundant hamburger on desktop */
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:18px}
+.topbar-title{display:flex;flex-direction:column;gap:2px;min-width:0}
+.topbar-title strong{font-size:17px;color:#142844}
+.topbar-title small{font-size:12px;color:#8593a7}
+.topbar-actions{display:flex;align-items:center;gap:12px}
+.menu-toggle{display:none;border:1px solid #dce4ee;background:#fff;border-radius:9px;padding:7px 12px;color:#142844;font-size:20px}
+.sidebar-scrim{display:none}
+@media(max-width:760px){.menu-toggle{display:block}.sidebar-scrim{display:block;position:fixed;inset:0;z-index:19;border:0;background:#14284488}.topbar-title strong{font-size:14px}.topbar-title small{font-size:10px}}
