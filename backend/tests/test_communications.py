@@ -121,6 +121,8 @@ def test_notification_mark_read_cannot_access_other_user(app):
 def test_school_notice_reaches_tenant_wide_member_only(app):
     with app.app_context():
         tenant=Tenant(name="Group")
+        db.session.add(tenant)
+        db.session.flush()
         school=School(tenant_id=tenant.id,name="Campus")
         another=School(tenant_id=tenant.id,name="Other campus")
         global_member=User(email="group-owner@example.test",password_hash="test")
