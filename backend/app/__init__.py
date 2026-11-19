@@ -26,8 +26,10 @@ def create_app(test_config=None):
     migrate.init_app(app, db)
     from . import models
     from .api import api
+    from .academics import academics
     from .cli import bootstrap_demo
     app.register_blueprint(api)
+    app.register_blueprint(academics)
     app.cli.add_command(bootstrap_demo)
 
     @app.before_request
