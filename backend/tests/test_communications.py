@@ -70,3 +70,49 @@ def test_notification_inbox_scoped_to_authenticated_user(app):
         assert result.status_code==200
         assert result.json["items"]==[]
         assert result.json["unread"]==0
+
+def test_homework_requires_authentication(app):
+    client=app.test_client()
+    assert client.get("/api/homework").status_code==401
+    assert client.post("/api/homework",json={}).status_code==401
+
+def test_homework_student_cannot_publish(app):
+    with app.app_context():
+        tenant=Tenant(name="School")
+        student=User(email="student-role@example.test",password_hash="test")
+        db.session.add_all([tenant,student])
+        db.session.flush()
+        membership=Membership(tenant_id=tenant.id,user_id=student.id,role="student")
+        db.session.add(membership)
+        db.session.commit()
+        client=app.test_client()
+        with client.session_transaction() as sess:
+            sess["user_id"]=student.id
+            sess["tenant_id"]=tenant.id
+            sess["membership_id"]=membership.id
+            sess["csrf_token"]="test-csrf"
+        response=client.post("/api/homework",json={"title":"Forbidden"},headers={"X-CSRF-Token":"test-csrf"})
+        assert response.status_code==403
+
+def test_notification_mark_read_cannot_access_other_user(app):
+    with app.app_context():
+        tenant=Tenant(name="School")
+        first=User(email="read-first@example.test",password_hash="test")
+        second=User(email="read-second@example.test",password_hash="test")
+        db.session.add_all([tenant,first,second])
+        db.session.flush()
+        membership=Membership(tenant_id=tenant.id,user_id=first.id,role="parent")
+        db.session.add_all([membership,Membership(tenant_id=tenant.id,user_id=second.id,role="parent")])
+        note=Notification(tenant_id=tenant.id,recipient_id=second.id,kind="homework",title="Private",body="Private",target_path="")
+        db.session.add(note)
+        db.session.commit()
+        client=app.test_client()
+        with client.session_transaction() as sess:
+            sess["user_id"]=first.id
+            sess["tenant_id"]=tenant.id
+            sess["membership_id"]=membership.id
+            sess["csrf_token"]="test-csrf"
+        response=client.post(f"/api/notifications/{note.id}/read",headers={"X-CSRF-Token":"test-csrf"})
+        assert response.status_code==404
+        db.session.refresh(note)
+        assert note.read_at is None
