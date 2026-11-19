@@ -31,6 +31,8 @@ export default function AcademicWorkspace() {
   const [rows, setRows] = useState<AcademicRow[]>([]);
   const [form, setForm] = useState<AcademicRow>({});
   const [schoolName, setSchoolName] = useState("");
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [references, setReferences] = useState<Record<string, AcademicRow[]>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const selected = kinds.find(k => k.key === kind)!;
@@ -53,9 +55,17 @@ export default function AcademicWorkspace() {
     try { const result = await api.login(email, password, tenant); setSession(result); setPassword(""); }
     catch (e) { setError(message(e)); } finally { setBusy(false); }
   }
+  useEffect(() => {
+    if (!session || !schoolId) { setReferences({}); return; }
+    let cancelled = false;
+    Promise.all((["grades","students","years","sections"] as AcademicKind[]).map(async key => [key, (await api.list(key, schoolId)).items] as const))
+      .then(entries => { if (!cancelled) setReferences(Object.fromEntries(entries)); })
+      .catch(e => { if (!cancelled) setError(message(e)); });
+    return () => { cancelled = true; };
+  }, [session, schoolId, kind]);
   async function create(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError("");
-    try { await api.create(kind, { ...form, school_id: schoolId }); setForm({}); setRows((await api.list(kind, schoolId)).items); }
+    try { if (editingId) await api.update(kind, editingId, form); else await api.create(kind, { ...form, school_id: schoolId }); setEditingId(null); setForm({}); setRows((await api.list(kind, schoolId)).items); }
     catch (e) { setError(message(e)); } finally { setBusy(false); }
   }
   async function addSchool(e: React.FormEvent) {
@@ -68,8 +78,8 @@ export default function AcademicWorkspace() {
   {error&&<p role="alert" className="live-error">{error}</p>}
   <label>المدرسة<select value={schoolId} onChange={e=>setSchoolId(e.target.value)}>{schools.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
   {session.role==="owner"&&<form className="live-inline" onSubmit={addSchool}><input aria-label="اسم المدرسة الجديدة" required maxLength={200} value={schoolName} onChange={e=>setSchoolName(e.target.value)} placeholder="اسم مدرسة جديدة"/><button disabled={busy}>إضافة مدرسة</button></form>}
-  <div className="live-tabs">{kinds.map(k=><button type="button" key={k.key} aria-pressed={kind===k.key} onClick={()=>{setKind(k.key);setForm({});setError("");}}>{k.title}</button>)}</div>
-  <div className="table-wrap"><table><thead><tr>{selected.fields.map(f=><th key={f.name}>{f.label}</th>)}<th>المعرف</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}>{selected.fields.map(f=><td key={f.name}>{r[f.name]||"—"}</td>)}<td><code>{r.id}</code></td></tr>)}</tbody></table>{!rows.length&&<p>لا توجد سجلات حالياً.</p>}</div>
-  {["owner","principal","registrar"].includes(session.role)&&schoolId&&<form className="live-form" onSubmit={create}><h3>إضافة {selected.title}</h3>{selected.fields.map(f=><label key={f.name}>{f.label}<input required maxLength={200} value={form[f.name]||""} onChange={e=>setForm(v=>({...v,[f.name]:e.target.value}))}/></label>)}<button disabled={busy}>حفظ في قاعدة البيانات</button></form>}
+  <div className="live-tabs">{kinds.map(k=><button type="button" key={k.key} aria-pressed={kind===k.key} onClick={()=>{setKind(k.key);setForm({});setEditingId(null);setError("");}}>{k.title}</button>)}</div>
+  <div className="table-wrap"><table><thead><tr>{selected.fields.map(f=><th key={f.name}>{f.label}</th>)}<th>المعرف</th><th>الإجراءات</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}>{selected.fields.map(f=><td key={f.name}>{r[f.name]||"—"}</td>)}<td><code>{r.id}</code></td><td><button type="button" onClick={()=>{setEditingId(r.id);setForm(Object.fromEntries(selected.fields.map(f=>[f.name,r[f.name]||""])));}}>تعديل</button></td></tr>)}</tbody></table>{!rows.length&&<p>لا توجد سجلات حالياً.</p>}</div>
+  {["owner","principal","registrar"].includes(session.role)&&schoolId&&<form className="live-form" onSubmit={create}><h3>{editingId?"تعديل":"إضافة"} {selected.title}</h3>{selected.fields.map(f=><label key={f.name}>{f.label}{({grade_level_id:"grades",student_id:"students",academic_year_id:"years",section_id:"sections"} as Record<string,string>)[f.name] ? <select required value={form[f.name]||""} onChange={e=>setForm(v=>({...v,[f.name]:e.target.value}))}><option value="">اختر {f.label}</option>{(references[({grade_level_id:"grades",student_id:"students",academic_year_id:"years",section_id:"sections"} as Record<string,string>)[f.name]]||[]).map(r=><option key={r.id} value={r.id}>{r.name||r.full_name||r.id}</option>)}</select> : <input required maxLength={200} value={form[f.name]||""} onChange={e=>setForm(v=>({...v,[f.name]:e.target.value}))}/>}</label>)}<div className="live-inline"><button disabled={busy}>{editingId?"حفظ التعديل":"حفظ في قاعدة البيانات"}</button>{editingId&&<button type="button" onClick={()=>{setEditingId(null);setForm({});}}>إلغاء التعديل</button>}</div></form>}
   </section>;
 }
