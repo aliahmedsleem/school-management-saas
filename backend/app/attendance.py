@@ -5,6 +5,8 @@ from sqlalchemy.exc import IntegrityError
 from . import db
 from .models import AttendanceRecord, Student, School, StudentAccount, GuardianStudent
 from .security import require_membership
+from .notifications import enqueue
+from .models import GuardianStudent, StudentAccount
 
 attendance = Blueprint("attendance", __name__, url_prefix="/api/attendance")
 STATUSES = {"present", "absent", "late", "excused"}
@@ -68,6 +70,7 @@ def record_attendance():
         AttendanceRecord.student_id == student_id,
         AttendanceRecord.day == day
     ))
+    previous_status = record.status if record is not None else None
     if record is None:
         record = AttendanceRecord(tenant_id=g.tenant_id, school_id=school_id,
                                   student_id=student_id, day=day,
@@ -75,6 +78,14 @@ def record_attendance():
         db.session.add(record)
     else:
         record.status, record.note, record.recorded_by = status, note, g.user_id
+    if status in ("absent", "late") and previous_status != status:
+        student = student_in_school(student_id, school_id)
+        guardians = db.session.scalars(select(GuardianStudent.user_id).where(GuardianStudent.student_id == student_id)).all()
+        students = db.session.scalars(select(StudentAccount.user_id).where(StudentAccount.student_id == student_id)).all()
+        label = "غياب" if status == "absent" else "تأخر"
+        body = f"عزيزي ولي الأمر، تم تسجيل {label} للتلميذ {student.full_name} بتاريخ {day.isoformat()}. يرجى مراجعة المدرسة عند الحاجة."
+        enqueue(g.tenant_id, guardians, "attendance", f"تنبيه {label} الطالب", body, school_id, g.user_id, "/attendance")
+        enqueue(g.tenant_id, students, "attendance", f"تنبيه {label}", f"تم تسجيل {label} في سجلك بتاريخ {day.isoformat()}.", school_id, g.user_id, "/attendance")
     try:
         db.session.commit()
     except IntegrityError:
