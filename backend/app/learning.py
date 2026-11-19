@@ -96,20 +96,22 @@ def save_grade():
     if not isinstance(assessment,str) or not 1<=len(assessment.strip())<=100 or type(score) not in (int,float) or type(max_score) not in (int,float) or not(math.isfinite(score) and math.isfinite(max_score)) or not(0<=score<=max_score and 0<max_score<=1000):
         return jsonify(error="invalid_grade"),400
     obj=db.session.scalar(select(GradeRecord).where(GradeRecord.tenant_id==g.tenant_id,GradeRecord.school_id==sid,GradeRecord.student_id==student.id,GradeRecord.assignment_id==assignment.id,GradeRecord.assessment==assessment.strip()))
+    changed = obj is None or obj.score != float(score) or obj.max_score != float(max_score)
     if obj is None:
         obj=GradeRecord(tenant_id=g.tenant_id,school_id=sid,student_id=student.id,assignment_id=assignment.id,assessment=assessment.strip())
         db.session.add(obj)
     obj.score=float(score);obj.max_score=float(max_score)
-    student_users=db.session.scalars(select(StudentAccount.user_id).where(StudentAccount.student_id==student.id)).all()
-    guardian_users=db.session.scalars(select(GuardianStudent.user_id).where(GuardianStudent.student_id==student.id)).all()
-    subject=db.session.get(Subject,assignment.subject_id)
-    subject_name=subject.name if subject and subject.tenant_id==g.tenant_id else "المادة الدراسية"
-    enqueue(g.tenant_id,student_users,"grade","درجة جديدة",
-            f"تم تسجيل درجة {assessment.strip()} في مادة {subject_name}.",
-            sid,g.user_id,"/learning")
-    enqueue(g.tenant_id,guardian_users,"grade","تحديث درجات الطالب",
-            f"عزيزي ولي الأمر، تم تسجيل درجة جديدة للتلميذ {student.full_name} في مادة {subject_name}.",
-            sid,g.user_id,"/learning")
+    if changed:
+            student_users=db.session.scalars(select(StudentAccount.user_id).where(StudentAccount.student_id==student.id)).all()
+        guardian_users=db.session.scalars(select(GuardianStudent.user_id).where(GuardianStudent.student_id==student.id)).all()
+        subject=db.session.get(Subject,assignment.subject_id)
+        subject_name=subject.name if subject and subject.tenant_id==g.tenant_id else "المادة الدراسية"
+        enqueue(g.tenant_id,student_users,"grade","درجة جديدة",
+                f"تم تسجيل درجة {assessment.strip()} في مادة {subject_name}.",
+                sid,g.user_id,"/learning")
+        enqueue(g.tenant_id,guardian_users,"grade","تحديث درجات الطالب",
+                f"عزيزي ولي الأمر، تم تسجيل درجة جديدة للتلميذ {student.full_name} في مادة {subject_name}.",
+                sid,g.user_id,"/learning")
     err=commit()
     return err if err else jsonify(id=obj.id,score=obj.score,max_score=obj.max_score)
 
