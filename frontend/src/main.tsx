@@ -42,7 +42,7 @@ function App(){
   <main className="content">
    <header className="topbar"><button className="menu-toggle" onClick={()=>setMenu(v=>!v)} aria-label="فتح القائمة">☰</button><div><strong>{role?titles[role]:"SchoolCloud"}</strong><small>واجهة مرتبطة بصلاحيات الحساب الفعلية</small></div><InstallApp/></header>
    {!role&&<button className="public-back" onClick={()=>setShowLogin(false)}>← العودة إلى الصفحة الرئيسية</button>}
-   <RolePortal page={page} onRole={handleRole}/>
+   <RolePortal page={page} onRole={handleRole} onNavigate={setPage}/>
    <footer>SchoolCloud · نسخة اختبار · يمنع استخدام بيانات مدرسية حقيقية قبل اعتماد الحماية والاختبارات</footer>
   </main>
  </div>;
