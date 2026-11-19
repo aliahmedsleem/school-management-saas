@@ -117,3 +117,22 @@ class StudentEnrollment(db.Model):
     academic_year_id = db.Column(db.String(36), db.ForeignKey("academic_years.id"), nullable=False)
     section_id = db.Column(db.String(36), db.ForeignKey("class_sections.id"), nullable=False)
     __table_args__ = (db.UniqueConstraint("student_id", "academic_year_id", name="uq_student_year"),)
+
+class StudentAccount(db.Model):
+    __tablename__ = "student_accounts"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False, unique=True)
+    student_id = db.Column(db.String(36), db.ForeignKey("students.id"), nullable=False, unique=True)
+
+class TeacherAccount(db.Model):
+    __tablename__ = "teacher_accounts"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False, unique=True)
+    teacher_id = db.Column(db.String(36), db.ForeignKey("teachers.id"), nullable=False, unique=True)
+
+class GuardianStudent(db.Model):
+    __tablename__ = "guardian_students"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False, index=True)
+    student_id = db.Column(db.String(36), db.ForeignKey("students.id"), nullable=False)
+    __table_args__ = (db.UniqueConstraint("user_id", "student_id", name="uq_guardian_student"),)
