@@ -128,3 +128,69 @@ def add_account():
         db.session.rollback()
         return jsonify(error="duplicate_or_invalid_record"),409
     return jsonify(id=membership.id,email=user.email,role=role,school_id=school_id),201
+
+@portals.post("/guardians/link")
+@require_membership("owner", "principal", "registrar")
+def link_guardian():
+    data = request.get_json(silent=True) or {}
+    membership_id = data.get("membership_id")
+    student_id = data.get("student_id")
+    membership = db.session.scalar(select(Membership).where(
+        Membership.id == membership_id,
+        Membership.tenant_id == g.tenant_id,
+        Membership.role == "parent",
+    ))
+    if not membership or not membership.school_id:
+        return jsonify(error="guardian_not_found"), 404
+    if g.membership.school_id and g.membership.school_id != membership.school_id:
+        return jsonify(error="forbidden"), 403
+    student = db.session.scalar(select(Student).where(
+        Student.id == student_id,
+        Student.tenant_id == g.tenant_id,
+        Student.school_id == membership.school_id,
+    ))
+    if not student:
+        return jsonify(error="student_not_found"), 404
+    existing = db.session.scalar(select(GuardianStudent).where(
+        GuardianStudent.user_id == membership.user_id,
+        GuardianStudent.student_id == student.id,
+    ))
+    if existing:
+        return jsonify(ok=True, already_linked=True)
+    db.session.add(GuardianStudent(user_id=membership.user_id, student_id=student.id))
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify(error="duplicate_or_invalid_record"), 409
+    return jsonify(ok=True), 201
+
+@portals.get("/school-students")
+@require_membership("owner", "principal", "registrar")
+def school_students():
+    school_id = request.args.get("school_id", "")
+    if g.membership.school_id and school_id != g.membership.school_id:
+        return jsonify(error="forbidden"), 403
+    if not db.session.scalar(select(School.id).where(
+        School.id == school_id, School.tenant_id == g.tenant_id
+    )):
+        return jsonify(error="school_not_found"), 404
+    students = db.session.scalars(select(Student).where(
+        Student.tenant_id == g.tenant_id, Student.school_id == school_id
+    ).order_by(Student.full_name).limit(500)).all()
+    return jsonify(items=[{"id": s.id, "full_name": s.full_name, "student_code": s.student_code} for s in students])
+
+@portals.get("/school-teachers")
+@require_membership("owner", "principal", "registrar")
+def school_teachers():
+    school_id = request.args.get("school_id", "")
+    if g.membership.school_id and school_id != g.membership.school_id:
+        return jsonify(error="forbidden"), 403
+    if not db.session.scalar(select(School.id).where(
+        School.id == school_id, School.tenant_id == g.tenant_id
+    )):
+        return jsonify(error="school_not_found"), 404
+    teachers = db.session.scalars(select(Teacher).where(
+        Teacher.tenant_id == g.tenant_id, Teacher.school_id == school_id
+    ).order_by(Teacher.full_name).limit(500)).all()
+    return jsonify(items=[{"id": t.id, "full_name": t.full_name, "employee_code": t.employee_code} for t in teachers])
