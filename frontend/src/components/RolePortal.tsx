@@ -1,15 +1,16 @@
 import React, { useEffect, useState } from "react";
 import AcademicWorkspace from "./AcademicWorkspace";
 import AttendancePanel from "./AttendancePanel";
+import LearningPanel from "./LearningPanel";
 import { api, type SessionInfo, type MembershipInfo } from "../services/api";
 import "./academic.css";
 
 const names: Record<string,string> = {owner:"إدارة المؤسسة",principal:"إدارة المدرسة",registrar:"شؤون الطلبة",teacher:"المدرس",student:"الطالب",parent:"ولي الأمر"};
 const allowed: Record<string,string[]> = {
- owner:["overview","schools","subscriptions","accounts","students","teachers","classes","onboarding","attendance"],
+ owner:["overview","schools","subscriptions","accounts","students","teachers","classes","onboarding","attendance","learning"],
  principal:["overview","accounts","students","teachers","classes","onboarding","attendance"],
  registrar:["overview","students","classes","onboarding","attendance"],
- teacher:["overview","profile"], student:["overview","profile","attendance"],parent:["overview","children","attendance"]
+ teacher:["overview","profile","learning"], student:["overview","profile","attendance","learning"],parent:["overview","children","attendance","learning"]
 };
 export default function RolePortal({page, onRole}: {page:string;onRole?:(role:string)=>void}) {
  const [session,setSession]=useState<SessionInfo|null>(null);
@@ -82,6 +83,7 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
   <div className="role-banner"><div><strong>{names[role]||role}</strong><span>{session.user.email}</span></div><button onClick={async()=>{try{await api.logout();}finally{setSession(null);setMembers([]);setSchools([]);setProfile(null);setChildren([]);setNeedsSelection(false);}}}>تسجيل الخروج</button></div>
   {error&&<p className="live-error" role="alert">{error}</p>}
   {!permitted?<section className="live-panel"><h2>غير مصرح</h2><p>هذه الصفحة غير متاحة لدورك الحالي. اختر صفحة مسموحة من القائمة.</p></section>:
+  page==="learning"?<LearningPanel role={role} schools={schools}/>:
   page==="attendance"?<AttendancePanel role={role} schools={schools} children={children}/>:
   role==="parent"?<section className="live-panel"><h2>أبنائي</h2><p>الطلبة المرتبطون بحساب ولي الأمر فقط</p>{children.length?<div className="table-wrap"><table><thead><tr><th>الطالب</th><th>الرقم المدرسي</th></tr></thead><tbody>{children.map(c=><tr key={c.id}><td>{c.full_name}</td><td>{c.student_code}</td></tr>)}</tbody></table></div>:<p>لا يوجد أبناء مرتبطون بحسابك بعد.</p>}</section>:
   ["student","teacher"].includes(role)?<section className="live-panel"><h2>{role==="student"?"بوابة الطالب":"بوابة المدرس"}</h2>{profile?<><h3>{profile.name}</h3><p>الرقم: {profile.code}</p></>:<p>لم يتم ربط الحساب بسجل {role==="student"?"الطالب":"المدرس"} بعد.</p>}<p>الجداول والواجبات والدرجات ستظهر هنا بعد تفعيل وحداتها الخلفية.</p></section>:
