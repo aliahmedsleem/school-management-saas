@@ -1,3 +1,4 @@
+import math
 from flask import Blueprint, jsonify, request, g
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
@@ -67,7 +68,7 @@ def add_timetable():
     if not assignment or type(weekday)!=int or type(period)!=int or not(0<=weekday<=6 and 1<=period<=12):
         return jsonify(error="invalid_slot"),400
     # A section or teacher cannot be assigned to two lessons in the same slot.
-    occupied=db.session.scalars(select(TimetableEntry).where(TimetableEntry.school_id==sid,TimetableEntry.weekday==weekday,TimetableEntry.period==period)).all()
+    occupied=db.session.scalars(select(TimetableEntry).where(TimetableEntry.tenant_id==g.tenant_id,TimetableEntry.school_id==sid,TimetableEntry.weekday==weekday,TimetableEntry.period==period)).all()
     for entry in occupied:
         existing=find(TeachingAssignment,entry.assignment_id,sid)
         if existing and (existing.section_id==assignment.section_id or existing.teacher_id==assignment.teacher_id):
@@ -91,7 +92,7 @@ def save_grade():
     if not enrolled:return jsonify(error="student_not_enrolled_in_section"),400
     assessment=d.get("assessment")
     score,max_score=d.get("score"),d.get("max_score")
-    if not isinstance(assessment,str) or not 1<=len(assessment.strip())<=100 or type(score) not in (int,float) or type(max_score) not in (int,float) or not(0<=score<=max_score and 0<max_score<=1000):
+    if not isinstance(assessment,str) or not 1<=len(assessment.strip())<=100 or type(score) not in (int,float) or type(max_score) not in (int,float) or not(math.isfinite(score) and math.isfinite(max_score)) or not(0<=score<=max_score and 0<max_score<=1000):
         return jsonify(error="invalid_grade"),400
     obj=db.session.scalar(select(GradeRecord).where(GradeRecord.tenant_id==g.tenant_id,GradeRecord.school_id==sid,GradeRecord.student_id==student.id,GradeRecord.assignment_id==assignment.id,GradeRecord.assessment==assessment.strip()))
     if obj is None:
@@ -119,8 +120,8 @@ def mine():
         ids=[x.student_id for x in links]
     students=db.session.scalars(select(Student).where(Student.id.in_(ids),Student.tenant_id==g.tenant_id,*([Student.school_id==g.membership.school_id] if g.membership.school_id else []))).all() if ids else []
     allowed_ids=[s.id for s in students]
-    grades=db.session.scalars(select(GradeRecord).where(GradeRecord.student_id.in_(allowed_ids),GradeRecord.tenant_id==g.tenant_id)).all() if allowed_ids else []
-    enrollments=db.session.scalars(select(StudentEnrollment).where(StudentEnrollment.student_id.in_(allowed_ids),StudentEnrollment.tenant_id==g.tenant_id)).all() if allowed_ids else []
+    grades=db.session.scalars(select(GradeRecord).where(GradeRecord.student_id.in_(allowed_ids),GradeRecord.tenant_id==g.tenant_id,*([GradeRecord.school_id==g.membership.school_id] if g.membership.school_id else []))).all() if allowed_ids else []
+    enrollments=db.session.scalars(select(StudentEnrollment).where(StudentEnrollment.student_id.in_(allowed_ids),StudentEnrollment.tenant_id==g.tenant_id,*([StudentEnrollment.school_id==g.membership.school_id] if g.membership.school_id else []))).all() if allowed_ids else []
     section_ids=[e.section_id for e in enrollments]
     assignments=db.session.scalars(select(TeachingAssignment).where(TeachingAssignment.section_id.in_(section_ids),TeachingAssignment.tenant_id==g.tenant_id)).all() if section_ids else []
     lessons=db.session.scalars(select(TimetableEntry).where(TimetableEntry.assignment_id.in_([a.id for a in assignments]),TimetableEntry.tenant_id==g.tenant_id)).all() if assignments else []
