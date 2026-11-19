@@ -54,7 +54,7 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
  }
  async function select(m:MembershipInfo) {
   setBusy(true);setError("");
-  try {await api.selectMembership(m.id);const s=await api.me();setSession(s);onRole?.(s.role);const c=await api.portalContext();setSchools(c.schools);setNeedsSelection(false);}
+  try {await api.selectMembership(m.id);const s=await api.me();setSession(s);onRole?.(s.role);const c=await api.portalContext();setSchools(c.schools);setMembers(c.memberships);setNeedsSelection(false);}
   catch(e){setError(e instanceof Error?e.message:"تعذر اختيار المدرسة");}finally{setBusy(false);}
  }
  async function addAccount(e:React.FormEvent) {
