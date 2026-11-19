@@ -28,6 +28,7 @@ export const api = {
     return result;
   },
   me: async () => { const result = await call<SessionInfo & { csrf_token: string }>("/auth/me"); csrfToken = result.csrf_token; return result; },
+  pending: async () => {const result=await call<{user:{id:string;email:string};tenant_id:string;memberships:MembershipInfo[];selection_required:boolean;csrf_token:string}>("/auth/pending");csrfToken=result.csrf_token;return result;},
   logout: async () => { try { await call("/auth/logout", { method: "POST" }); } finally { csrfToken = null; } },
   portalContext: () => call<{role:string; school_id:string|null; memberships:MembershipInfo[]; schools:{id:string;name:string}[]}>("/portals/context"),
   selectMembership: (membership_id:string) => call<{role:string;school_id:string|null}>("/portals/select-membership", {method:"POST",body:JSON.stringify({membership_id})}),
