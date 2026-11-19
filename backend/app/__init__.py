@@ -25,17 +25,20 @@ def create_app(test_config=None):
     db.init_app(app)
     migrate.init_app(app, db)
     from . import models
+    from . import notification_models
     from .api import api
     from .academics import academics
     from .portals import portals
     from .attendance import attendance
     from .learning import learning
+    from .notifications import notifications
     from .cli import bootstrap_demo, bootstrap_staging, create_staging_owner
     app.register_blueprint(api)
     app.register_blueprint(academics)
     app.register_blueprint(portals)
     app.register_blueprint(attendance)
     app.register_blueprint(learning)
+    app.register_blueprint(notifications)
     app.cli.add_command(bootstrap_demo)
     app.cli.add_command(bootstrap_staging)
     app.cli.add_command(create_staging_owner)
