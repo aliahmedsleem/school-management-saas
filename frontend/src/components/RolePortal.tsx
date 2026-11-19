@@ -15,7 +15,7 @@ const allowed: Record<string,string[]> = {
  owner:["overview","schools","subscriptions","accounts","students","teachers","classes","onboarding","attendance","learning"],
  principal:["overview","accounts","students","teachers","classes","onboarding","attendance","learning"],
  registrar:["overview","accounts","students","classes","onboarding","attendance","learning"],
- teacher:["overview","profile","learning","homework"], student:["overview","attendance","learning","homework"],parent:["overview","attendance","learning"]
+ teacher:["overview","profile","learning","homework"], student:["overview","attendance","learning","homework"],parent:["overview","attendance","learning","homework"]
 };
 export default function RolePortal({page, onRole}: {page:string;onRole?:(role:string)=>void}) {
  const [session,setSession]=useState<SessionInfo|null>(null);
@@ -93,9 +93,9 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
   {error&&<p className="live-error" role="alert">{error}</p>}
   {page==="overview"&&<VoiceNotificationSettings role={role}/>}
   {!permitted?<section className="live-panel"><h2>غير مصرح</h2><p>هذه الصفحة غير متاحة لدورك الحالي. اختر صفحة مسموحة من القائمة.</p></section>:
-  ["student","parent"].includes(role)?<FamilyPortal role={role as "student"|"parent"} page={page}/>:
   page==="notifications"?<NotificationInbox/>:
   page==="homework"?<HomeworkPanel role={role}/>:
+  ["student","parent"].includes(role)?<FamilyPortal role={role as "student"|"parent"} page={page}/>:
   page==="learning"?<LearningPanel role={role} schools={schools}/>:
   page==="attendance"?<AttendancePanel role={role} schools={schools} children={children}/>:
   role==="parent"?<section className="live-panel"><h2>أبنائي</h2><p>الطلبة المرتبطون بحساب ولي الأمر فقط</p>{children.length?<div className="table-wrap"><table><thead><tr><th>الطالب</th><th>الرقم المدرسي</th></tr></thead><tbody>{children.map(c=><tr key={c.id}><td>{c.full_name}</td><td>{c.student_code}</td></tr>)}</tbody></table></div>:<p>لا يوجد أبناء مرتبطون بحسابك بعد.</p>}</section>:
