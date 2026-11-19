@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify, g
 from sqlalchemy import select
 from . import db
 from .security import require_membership
-from .models import TeachingAssignment, TeacherAccount, StudentEnrollment, StudentAccount, GuardianStudent, Student, Subject
+from .models import TeachingAssignment, TeacherAccount, StudentEnrollment, StudentAccount, GuardianStudent, Student, Subject, Membership
 from .notification_models import Homework
 from .notifications import enqueue
 
@@ -47,11 +47,6 @@ def create_homework():
         StudentEnrollment.school_id==assignment.school_id,
         StudentEnrollment.section_id==assignment.section_id)).all())
     recipients=set()
-    if student_ids:
-        recipients.update(db.session.scalars(select(StudentAccount.user_id).where(
-            StudentAccount.student_id.in_(student_ids))).all())
-        recipients.update(db.session.scalars(select(GuardianStudent.user_id).where(
-            GuardianStudent.student_id.in_(student_ids))).all())
     subject=db.session.get(Subject,assignment.subject_id)
     subject_name=subject.name if subject else "المادة الدراسية"
     # Individualize parent notifications so the child is identifiable without leaking names across families.
@@ -63,6 +58,8 @@ def create_homework():
             StudentAccount.student_id==student_id)).all()
         parent_users=db.session.scalars(select(GuardianStudent.user_id).where(
             GuardianStudent.student_id==student_id)).all()
+        recipients.update(student_users)
+        recipients.update(parent_users)
         enqueue(g.tenant_id,student_users,"homework","واجب دراسي جديد",
                 f"لديك واجب جديد في مادة {subject_name}: {obj.title}.",assignment.school_id,g.user_id,"/homework")
         enqueue(g.tenant_id,parent_users,"homework","واجب جديد لابنك",
