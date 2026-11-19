@@ -20,7 +20,7 @@ def context():
     school_ids = {m.school_id for m in members if m.school_id}
     if selected.school_id:
         school_ids = {selected.school_id}
-    schools = db.session.scalars(select(School).where(School.tenant_id == g.tenant_id, *([School.id.in_(school_ids)] if selected.school_id else []))).all()
+    schools = db.session.scalars(select(School).where(School.tenant_id == g.tenant_id, *([School.id == selected.school_id] if selected.school_id else []))).all() if selected.role in {"owner","principal","registrar"} else []
     return jsonify(role=selected.role, school_id=selected.school_id,
                    schools=[{"id": s.id, "name": s.name} for s in schools],
                    memberships=[{"id": m.id, "role": m.role, "school_id": m.school_id} for m in members])
@@ -72,19 +72,21 @@ def my_profile():
                    code=record.student_code if model is Student else record.employee_code)
 
 @portals.get("/accounts")
-@require_membership("owner", "principal")
+@require_membership("owner", "principal", "registrar")
 def accounts():
     scope = g.membership.school_id
     members = db.session.scalars(select(Membership).where(
         Membership.tenant_id == g.tenant_id,
         *([Membership.school_id == scope] if scope else [])
     ).limit(200)).all()
+    if g.membership.role == "registrar":
+        members = [m for m in members if m.role in {"student", "parent"}]
     users = {u.id:u for u in db.session.scalars(select(User).where(User.id.in_([m.user_id for m in members]))).all()} if members else {}
     return jsonify(items=[{"id":m.id,"email":users[m.user_id].email,"role":m.role,"school_id":m.school_id}
                           for m in members if m.user_id in users])
 
 @portals.post("/accounts")
-@require_membership("owner", "principal")
+@require_membership("owner", "principal", "registrar")
 def add_account():
     data = request.get_json(silent=True) or {}
     email = str(data.get("email","")).strip().lower()
@@ -94,7 +96,8 @@ def add_account():
     record_id = data.get("record_id")
     if role not in ROLES or role == "owner" or not isinstance(password,str) or len(password)<12 or len(password)>128 or "@" not in email:
         return jsonify(error="invalid_account"), 400
-    if g.membership.role == "principal" and role == "principal":
+    # Platform owner assigns school leadership; principal assigns staff; registrar handles families only.
+    if (role == "principal" and g.membership.role != "owner") or (g.membership.role == "registrar" and role not in {"student", "parent"}):
         return jsonify(error="forbidden"), 403
     if role in {"teacher","student","parent","registrar","principal"} and not school_id:
         return jsonify(error="school_required"), 400
