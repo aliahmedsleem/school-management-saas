@@ -3,7 +3,6 @@ import AcademicWorkspace from "./AcademicWorkspace";
 import AttendancePanel from "./AttendancePanel";
 import LearningPanel from "./LearningPanel";
 import FamilyPortal from "./FamilyPortal";
-import VoiceNotificationSettings from "./VoiceNotificationSettings";
 import HomeworkPanel from "./HomeworkPanel";
 import NotificationInbox from "./NotificationInbox";
 import NotificationVoiceListener from "./NotificationVoiceListener";
