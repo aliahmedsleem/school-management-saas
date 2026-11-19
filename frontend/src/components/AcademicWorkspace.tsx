@@ -24,7 +24,6 @@ export default function AcademicWorkspace({ page, authenticatedSession }: { page
   const [session, setSession] = useState<SessionInfo | null>(authenticatedSession || null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [tenant, setTenant] = useState("");
   const [schools, setSchools] = useState<School[]>([]);
   const [schoolId, setSchoolId] = useState("");
   const [kind, setKind] = useState<AcademicKind>("students");
@@ -59,7 +58,7 @@ export default function AcademicWorkspace({ page, authenticatedSession }: { page
   }, [session, schoolId, effectiveKind, page, activeKind]);
   async function login(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError("");
-    try { const result = await api.login(email, password, tenant); setSession(result); setPassword(""); }
+    try { const result = await api.login(email, password); setSession(result); setPassword(""); }
     catch (e) { setError(message(e)); } finally { setBusy(false); }
   }
   useEffect(() => {
@@ -80,7 +79,7 @@ export default function AcademicWorkspace({ page, authenticatedSession }: { page
     try { await api.addSchool(schoolName); setSchoolName(""); await loadSchools(); }
     catch (e) { setError(message(e)); } finally { setBusy(false); }
   }
-  if (!session) return <section className="live-panel"><h2>الدخول إلى البيانات الفعلية</h2><p>هذه المنطقة متصلة بالـ API المحلي، وليست بيانات المعاينة.</p><form className="live-form" onSubmit={login}><label>البريد الإلكتروني<input type="email" required value={email} onChange={e => setEmail(e.target.value)}/></label><label>كلمة المرور<input type="password" required value={password} onChange={e => setPassword(e.target.value)}/></label><label>معرف حساب المدرسة (Tenant ID)<input required value={tenant} onChange={e => setTenant(e.target.value)}/></label><button disabled={busy}>تسجيل الدخول</button></form>{error&&<p role="alert" className="live-error">{error}</p>}</section>;
+  if (!session) return <section className="live-panel"><h2>الدخول إلى البيانات الفعلية</h2><p>هذه المنطقة متصلة بالـ API المحلي، وليست بيانات المعاينة.</p><form className="live-form" onSubmit={login}><label>البريد الإلكتروني<input type="email" required value={email} onChange={e => setEmail(e.target.value)}/></label><label>كلمة المرور<input type="password" required value={password} onChange={e => setPassword(e.target.value)}/></label><button disabled={busy}>تسجيل الدخول</button></form>{error&&<p role="alert" className="live-error">{error}</p>}</section>;
   return <section className="live-panel"><div className="live-heading"><div><h2>{session.role==="owner"?"إدارة المؤسسة والمدارس":"إدارة البيانات الأكاديمية"}</h2><p>{session.user.email} — {session.role}</p></div>{!authenticatedSession && <button type="button" onClick={async()=>{await api.logout();setSession(null);setSchools([]);setRows([]);}}>تسجيل الخروج</button>}</div>
   {error&&<p role="alert" className="live-error">{error}</p>}
   {session.role!=="owner"&&<label>المدرسة<select value={schoolId} onChange={e=>setSchoolId(e.target.value)}>{schools.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>}
