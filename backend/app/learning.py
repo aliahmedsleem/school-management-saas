@@ -102,7 +102,7 @@ def save_grade():
         db.session.add(obj)
     obj.score=float(score);obj.max_score=float(max_score)
     if changed:
-            student_users=db.session.scalars(select(StudentAccount.user_id).where(StudentAccount.student_id==student.id)).all()
+        student_users=db.session.scalars(select(StudentAccount.user_id).where(StudentAccount.student_id==student.id)).all()
         guardian_users=db.session.scalars(select(GuardianStudent.user_id).where(GuardianStudent.student_id==student.id)).all()
         subject=db.session.get(Subject,assignment.subject_id)
         subject_name=subject.name if subject and subject.tenant_id==g.tenant_id else "المادة الدراسية"
