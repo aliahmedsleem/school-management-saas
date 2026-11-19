@@ -63,3 +63,41 @@ def test_account_distribution_is_role_scoped():
     assert "students" not in resolved.json
     assert client.get("/api/portals/school-qr/resolve", query_string={"token": token + "tampered"}).status_code == 400
     assert client.get("/api/portals/school-qr/resolve", query_string={"token": "invalid"}).status_code == 400
+
+
+def test_login_resolves_single_tenant_without_tenant_id():
+    app=create_app({"TESTING":True,"SQLALCHEMY_DATABASE_URI":"sqlite:///:memory:","SECRET_KEY":"test-only"})
+    with app.app_context():
+        db.create_all()
+        tenant=Tenant(name="School A")
+        user=User(email="autologin@example.test",password_hash=generate_password_hash("secure-password-123"))
+        db.session.add_all([tenant,user])
+        db.session.flush()
+        db.session.add(Membership(tenant_id=tenant.id,user_id=user.id,role="owner"))
+        db.session.commit()
+        expected_tenant=tenant.id
+    client=app.test_client()
+    result=client.post("/api/auth/login",json={"email":"autologin@example.test","password":"secure-password-123"})
+    assert result.status_code==200
+    assert result.json["tenant_id"]==expected_tenant
+    assert result.json["role"]=="owner"
+    assert client.get("/api/auth/me").status_code==200
+    assert client.post("/api/auth/login",json={"email":"autologin@example.test","password":"wrong"}).status_code==401
+
+
+def test_login_does_not_guess_between_multiple_tenants():
+    app=create_app({"TESTING":True,"SQLALCHEMY_DATABASE_URI":"sqlite:///:memory:","SECRET_KEY":"test-only"})
+    with app.app_context():
+        db.create_all()
+        first=Tenant(name="A")
+        second=Tenant(name="B")
+        user=User(email="multi@example.test",password_hash=generate_password_hash("secure-password-123"))
+        db.session.add_all([first,second,user])
+        db.session.flush()
+        db.session.add_all([Membership(tenant_id=t.id,user_id=user.id,role="owner") for t in (first,second)])
+        db.session.commit()
+    client=app.test_client()
+    result=client.post("/api/auth/login",json={"email":"multi@example.test","password":"secure-password-123"})
+    assert result.status_code==409
+    assert result.json["error"]=="tenant_selection_required"
+    assert client.get("/api/auth/me").status_code==401
