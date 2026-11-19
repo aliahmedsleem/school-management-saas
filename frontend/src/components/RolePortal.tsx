@@ -53,7 +53,7 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
   try{
    const s=await api.login(email,password,tenant);
    setMembers(s.memberships||[]);
-   if((s.memberships||[]).length>1) {setNeedsSelection(true);setSession(s);setPassword("");return;}
+   if((s.memberships||[]).length>1) {setNeedsSelection(true);setSession(s);setPassword("");onRole?.("");return;}
    const c=await api.portalContext();
    setSchools(c.schools);setNeedsSelection(false);setSession(s);onRole?.(s.role);setPassword("");
   }catch(e){setError(e instanceof Error?e.message:"فشل تسجيل الدخول");}finally{setBusy(false);}
@@ -84,7 +84,7 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
  const role=session.role;
  const permitted=(allowed[role]||["overview"]).includes(page);
  return <div className="role-portal">
-  <div className="role-banner"><div><strong>{names[role]||role}</strong><span>{session.user.email}</span></div><button onClick={async()=>{try{await api.logout();}finally{setSession(null);setMembers([]);setSchools([]);setProfile(null);setChildren([]);setNeedsSelection(false);}}}>تسجيل الخروج</button></div>
+  <div className="role-banner"><div><strong>{names[role]||role}</strong><span>{session.user.email}</span></div><button onClick={async()=>{try{await api.logout();}finally{setSession(null);setMembers([]);setSchools([]);setProfile(null);setChildren([]);setNeedsSelection(false);onRole?.("");}}}>تسجيل الخروج</button></div>
   {error&&<p className="live-error" role="alert">{error}</p>}
   {!permitted?<section className="live-panel"><h2>غير مصرح</h2><p>هذه الصفحة غير متاحة لدورك الحالي. اختر صفحة مسموحة من القائمة.</p></section>:
   ["student","parent"].includes(role)?<FamilyPortal role={role as "student"|"parent"} page={page}/>:
