@@ -1,6 +1,6 @@
 import os
 import hmac
-from flask import Flask, jsonify, request, session
+from flask import Flask, jsonify, request, session, send_from_directory
 from flask_sqlalchemy import SQLAlchemy
 from flask_migrate import Migrate
 
@@ -39,6 +39,19 @@ def create_app(test_config=None):
             supplied = request.headers.get("X-CSRF-Token", "")
             if not expected or not hmac.compare_digest(expected, supplied):
                 return jsonify(error="csrf_required"), 403
+
+    @app.get("/")
+    @app.get("/<path:asset_path>")
+    def frontend(asset_path=""):
+        from pathlib import Path
+        directory = Path(app.root_path).parent / "static_frontend"
+        if not directory.is_dir():
+            return jsonify(error="frontend_not_built"), 404
+        if asset_path and (directory / asset_path).is_file():
+            return send_from_directory(str(directory), asset_path)
+        if asset_path.startswith("api/"):
+            return jsonify(error="not_found"), 404
+        return send_from_directory(str(directory), "index.html")
 
     @app.get("/api/health")
     def health():
