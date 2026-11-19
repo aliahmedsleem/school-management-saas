@@ -24,7 +24,6 @@ export default function RolePortal({page, onRole, onNavigate}: {page:string;onRo
  const [loading,setLoading]=useState(true);
  const [email,setEmail]=useState("");
  const [password,setPassword]=useState("");
- const [tenant,setTenant]=useState("");
  const [error,setError]=useState("");
  const [members,setMembers]=useState<MembershipInfo[]>([]);
  const [profile,setProfile]=useState<{name:string;code:string}|null>(null);
@@ -57,7 +56,7 @@ export default function RolePortal({page, onRole, onNavigate}: {page:string;onRo
  async function login(e:React.FormEvent) {
   e.preventDefault();setBusy(true);setError("");
   try{
-   const s=await api.login(email,password,tenant);
+   const s=await api.login(email,password);
    setMembers(s.memberships||[]);
    if((s.memberships||[]).length>1) {setNeedsSelection(true);setSession(s);setPassword("");onRole?.("");return;}
    const c=await api.portalContext();
@@ -81,7 +80,6 @@ export default function RolePortal({page, onRole, onNavigate}: {page:string;onRo
   <form className="live-form" onSubmit={login}>
    <label>البريد الإلكتروني<input autoComplete="username" type="email" required value={email} onChange={e=>setEmail(e.target.value)}/></label>
    <label>كلمة المرور<input autoComplete="current-password" type="password" required value={password} onChange={e=>setPassword(e.target.value)}/></label>
-   <label>معرف المؤسسة (Tenant ID)<input required value={tenant} onChange={e=>setTenant(e.target.value)}/></label>
    <button disabled={busy}>{busy?"جاري الدخول...":"تسجيل الدخول"}</button>
   </form>{error&&<p className="live-error" role="alert">{error}</p>}
   <p>يحدد النظام صلاحياتك تلقائياً بعد تسجيل الدخول. لا يمكن اختيار دور أعلى من الصلاحية الممنوحة لحسابك.</p>
