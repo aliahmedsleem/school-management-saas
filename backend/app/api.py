@@ -13,14 +13,18 @@ def login():
     email = str(data.get("email", "")).strip().lower()
     password = data.get("password", "")
     tenant_id = data.get("tenant_id")
-    if not email or not password or not tenant_id:
+    if not email or not password:
         return jsonify(error="missing_credentials"), 400
     user = db.session.scalar(select(User).where(User.email == email))
     if not user or not user.is_active or not check_password_hash(user.password_hash, password):
         return jsonify(error="invalid_credentials"), 401
-    memberships = db.session.scalars(select(Membership).where(
-        Membership.user_id == user.id, Membership.tenant_id == tenant_id
-    )).all()
+    all_memberships = db.session.scalars(select(Membership).where(Membership.user_id == user.id)).all()
+    tenant_ids = {m.tenant_id for m in all_memberships}
+    if not tenant_id:
+        if len(tenant_ids) != 1:
+            return jsonify(error="invalid_credentials" if not tenant_ids else "tenant_selection_required"), 401 if not tenant_ids else 409
+        tenant_id = next(iter(tenant_ids))
+    memberships = [m for m in all_memberships if m.tenant_id == tenant_id]
     if not memberships:
         return jsonify(error="invalid_credentials"), 401
     membership = next((m for m in memberships if m.school_id is None), memberships[0])
