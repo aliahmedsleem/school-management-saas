@@ -38,7 +38,7 @@ def logout():
 @require_membership()
 def me():
     user = db.session.get(User, g.user_id)
-    return jsonify(user={"id": user.id, "email": user.email}, tenant_id=g.tenant_id, role=g.membership.role)
+    return jsonify(user={"id": user.id, "email": user.email}, tenant_id=g.tenant_id, role=g.membership.role, csrf_token=session.get("csrf_token"))
 
 @api.get("/schools")
 @require_membership("owner", "principal", "registrar")
