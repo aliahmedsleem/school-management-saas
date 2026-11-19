@@ -79,7 +79,9 @@ def accounts():
         Membership.tenant_id == g.tenant_id,
         *([Membership.school_id == scope] if scope else [])
     ).limit(200)).all()
-    if g.membership.role == "registrar":
+    if g.membership.role == "owner":
+        members = [m for m in members if m.role == "principal"]
+    elif g.membership.role == "registrar":
         members = [m for m in members if m.role in {"student", "parent"}]
     users = {u.id:u for u in db.session.scalars(select(User).where(User.id.in_([m.user_id for m in members]))).all()} if members else {}
     return jsonify(items=[{"id":m.id,"email":users[m.user_id].email,"role":m.role,"school_id":m.school_id}
@@ -96,8 +98,9 @@ def add_account():
     record_id = data.get("record_id")
     if role not in ROLES or role == "owner" or not isinstance(password,str) or len(password)<12 or len(password)>128 or "@" not in email:
         return jsonify(error="invalid_account"), 400
-    # Platform owner assigns school leadership; principal assigns staff; registrar handles families only.
-    if (role == "principal" and g.membership.role != "owner") or (g.membership.role == "registrar" and role not in {"student", "parent"}):
+    # Tenant owner provisions school principals only; school leadership provisions staff.
+    allowed_roles = {"owner": {"principal"}, "principal": {"registrar", "teacher", "student", "parent"}, "registrar": {"student", "parent"}}
+    if role not in allowed_roles[g.membership.role]:
         return jsonify(error="forbidden"), 403
     if role in {"teacher","student","parent","registrar","principal"} and not school_id:
         return jsonify(error="school_required"), 400
