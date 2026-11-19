@@ -32,6 +32,8 @@ export const api = {
   addSchool: (name: string) => call<School>("/schools", { method: "POST", body: JSON.stringify({ name }) }),
   list: (kind: AcademicKind, school_id: string) =>
     call<{ items: AcademicRow[] }>(`/academics/${kind}?school_id=${encodeURIComponent(school_id)}`),
+  update: (kind: AcademicKind, id: string, values: AcademicRow) =>
+    call<AcademicRow>(`/academics/${kind}/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(values) }),
   create: (kind: AcademicKind, values: AcademicRow) =>
     call<AcademicRow>(`/academics/${kind}`, { method: "POST", body: JSON.stringify(values) }),
 };
