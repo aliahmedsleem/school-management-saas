@@ -1,5 +1,6 @@
-from flask import Blueprint, jsonify, g, request, session
+from flask import Blueprint, jsonify, g, request, session, current_app
 from sqlalchemy import select
+from itsdangerous import URLSafeTimedSerializer, BadSignature, SignatureExpired
 from werkzeug.security import generate_password_hash
 from sqlalchemy.exc import IntegrityError
 from . import db
@@ -200,3 +201,44 @@ def school_teachers():
         Teacher.tenant_id == g.tenant_id, Teacher.school_id == school_id
     ).order_by(Teacher.full_name).limit(500)).all()
     return jsonify(items=[{"id": t.id, "full_name": t.full_name, "employee_code": t.employee_code} for t in teachers])
+
+
+def _school_qr_signer():
+    return URLSafeTimedSerializer(current_app.config["SECRET_KEY"], salt="schoolcloud-school-qr-v1")
+
+
+@portals.get("/school-qr")
+@require_membership("principal", "registrar")
+def school_qr():
+    """School identity token only; not proof of student identity."""
+    school_id = g.membership.school_id
+    if not school_id:
+        return jsonify(error="school_required"), 403
+    school = db.session.scalar(select(School).where(
+        School.id == school_id, School.tenant_id == g.tenant_id))
+    if not school:
+        return jsonify(error="school_not_found"), 404
+    token = _school_qr_signer().dumps({"tenant_id": g.tenant_id, "school_id": school.id})
+    return jsonify(token=token, school_id=school.id, school_name=school.name,
+                   expires_in_seconds=86400)
+
+
+@portals.get("/school-qr/resolve")
+def resolve_school_qr():
+    """Resolve a QR to a school name without exposing student records."""
+    token = request.args.get("token", "")
+    if not token or len(token) > 2048:
+        return jsonify(error="invalid_school_qr"), 400
+    try:
+        payload = _school_qr_signer().loads(token, max_age=86400)
+    except (BadSignature, SignatureExpired):
+        return jsonify(error="invalid_or_expired_school_qr"), 400
+    if not isinstance(payload, dict):
+        return jsonify(error="invalid_school_qr"), 400
+    school = db.session.scalar(select(School).where(
+        School.id == payload.get("school_id"),
+        School.tenant_id == payload.get("tenant_id")))
+    if not school:
+        return jsonify(error="school_not_found"), 404
+    return jsonify(school_id=school.id, school_name=school.name,
+                   tenant_id=school.tenant_id, verification_required=True)
