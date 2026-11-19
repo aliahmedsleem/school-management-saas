@@ -36,3 +36,37 @@ def test_enqueue_does_not_cross_tenants(app):
 def test_inbox_requires_login(app):
     response=app.test_client().get("/api/notifications")
     assert response.status_code==401
+
+def test_enqueue_within_tenant(app):
+    with app.app_context():
+        tenant=Tenant(name="School Group")
+        member=User(email="student@example.test",password_hash="test")
+        db.session.add_all([tenant,member])
+        db.session.flush()
+        db.session.add(Membership(tenant_id=tenant.id,user_id=member.id,role="student"))
+        db.session.flush()
+        assert enqueue(tenant.id,[member.id,member.id],"grade","درجة","تحديث") == 1
+        db.session.commit()
+        assert db.session.query(Notification).count()==1
+
+def test_notification_inbox_scoped_to_authenticated_user(app):
+    with app.app_context():
+        tenant=Tenant(name="School")
+        first=User(email="first@example.test",password_hash="test")
+        second=User(email="second@example.test",password_hash="test")
+        db.session.add_all([tenant,first,second])
+        db.session.flush()
+        db.session.add_all([
+            Membership(tenant_id=tenant.id,user_id=first.id,role="parent"),
+            Membership(tenant_id=tenant.id,user_id=second.id,role="parent"),
+        ])
+        db.session.add(Notification(tenant_id=tenant.id,recipient_id=second.id,kind="grade",title="Private",body="Private",target_path=""))
+        db.session.commit()
+        client=app.test_client()
+        with client.session_transaction() as sess:
+            sess["user_id"]=first.id
+            sess["tenant_id"]=tenant.id
+        result=client.get("/api/notifications")
+        assert result.status_code==200
+        assert result.json["items"]==[]
+        assert result.json["unread"]==0
