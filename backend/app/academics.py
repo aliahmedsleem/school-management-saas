@@ -59,6 +59,8 @@ def list_records(kind):
 def create_record(kind):
     if kind not in MODELS:
         return jsonify(error="unknown_resource"), 404
+    if g.membership.role == "registrar" and kind not in {"students", "enrollments"}:
+        return jsonify(error="forbidden"), 403
     data = request.get_json(silent=True)
     if not isinstance(data, dict):
         return jsonify(error="invalid_json"), 400
@@ -103,6 +105,8 @@ def create_record(kind):
 def update_record(kind, record_id):
     if kind not in MODELS:
         return jsonify(error="unknown_resource"), 404
+    if g.membership.role == "registrar" and kind not in {"students", "enrollments"}:
+        return jsonify(error="forbidden"), 403
     model, required, optional = MODELS[kind]
     obj = db.session.scalar(select(model).where(
         model.id == record_id, model.tenant_id == g.tenant_id
