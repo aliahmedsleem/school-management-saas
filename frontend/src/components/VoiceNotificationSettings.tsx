@@ -25,6 +25,6 @@ export default function VoiceNotificationSettings({role}:Props){
   <label className="voice-switch"><input type="checkbox" checked={enabled} disabled={!supported} onChange={e=>toggle(e.target.checked)}/> تفعيل قراءة الإشعارات بصوت عربي</label>
   <div className="live-inline"><button type="button" disabled={!supported} onClick={preview}>{speaking?"إعادة تشغيل المثال":"استمع إلى مثال"}</button>{speaking&&<button type="button" onClick={()=>{window.speechSynthesis.cancel();setSpeaking(false);}}>إيقاف الصوت</button>}</div>
   {!supported&&<p role="status">المتصفح الحالي لا يدعم تحويل النص إلى كلام.</p>}
-  <p className="voice-note">هذه إعدادات الصوت والمعاينة فقط؛ تشغيل تنبيه عند وصول واجب جديد يتطلب ربطها بخدمة الإشعارات عند تنفيذها. لا يُشغّل الصوت تلقائياً دون موافقتك، وقد يمنع المتصفح التشغيل في الخلفية.</p>
+  <p className="voice-note">عند تفعيل الخيار، يفحص النظام الإشعارات الجديدة أثناء فتح التطبيق ويقرأ أحدث تنبيه غير مقروء بصوت عربي. يعتمد الصوت على المتصفح ونظام التشغيل، وقد لا يعمل في الخلفية أو قبل تفاعل المستخدم مع الصفحة.</p>
  </section>;
 }
