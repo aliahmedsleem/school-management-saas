@@ -143,3 +143,37 @@ def test_school_notice_reaches_tenant_wide_member_only(app):
         db.session.commit()
         assert {n.recipient_id for n in db.session.scalars(select(Notification)).all()}=={
             global_member.id,school_member.id}
+
+
+def test_owner_overview_is_tenant_scoped_and_role_protected(app):
+    with app.app_context():
+        first = Tenant(name="First tenant")
+        second = Tenant(name="Second tenant")
+        owner = User(email="owner-overview@example.test", password_hash="test")
+        outsider = User(email="student-overview@example.test", password_hash="test")
+        db.session.add_all([first, second, owner, outsider])
+        db.session.flush()
+        db.session.add_all([
+            School(tenant_id=first.id, name="First school"),
+            School(tenant_id=second.id, name="Private second school"),
+        ])
+        owner_member = Membership(tenant_id=first.id, user_id=owner.id, role="owner")
+        student_member = Membership(tenant_id=first.id, user_id=outsider.id, role="student")
+        db.session.add_all([owner_member, student_member])
+        db.session.commit()
+        client = app.test_client()
+        assert client.get("/api/owner/overview").status_code == 401
+        with client.session_transaction() as sess:
+            sess["user_id"] = outsider.id
+            sess["tenant_id"] = first.id
+            sess["membership_id"] = student_member.id
+        assert client.get("/api/owner/overview").status_code == 403
+        with client.session_transaction() as sess:
+            sess["user_id"] = owner.id
+            sess["tenant_id"] = first.id
+            sess["membership_id"] = owner_member.id
+        response = client.get("/api/owner/overview")
+        assert response.status_code == 200
+        assert response.json["schools_count"] == 1
+        assert response.json["accounts_count"] == 2
+        assert [s["name"] for s in response.json["schools"]] == ["First school"]
