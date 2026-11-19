@@ -5,6 +5,7 @@ import LearningPanel from "./LearningPanel";
 import FamilyPortal from "./FamilyPortal";
 import VoiceNotificationSettings from "./VoiceNotificationSettings";
 import HomeworkPanel from "./HomeworkPanel";
+import NotificationInbox from "./NotificationInbox";
 import { api, type SessionInfo, type MembershipInfo } from "../services/api";
 import "./academic.css";
 
@@ -84,13 +85,14 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
  </section>;
  if(needsSelection && members.length>1) return <section className="live-panel"><h2>اختر الحساب والمدرسة</h2>{members.map(m=><button style={{margin:6}} disabled={busy} key={m.id} onClick={()=>select(m)}>{names[m.role]||m.role} — {m.school_id||"جميع المدارس"}</button>)}{error&&<p role="alert">{error}</p>}</section>;
  const role=session.role;
- const permitted=(allowed[role]||["overview"]).includes(page);
+ const permitted=page==="notifications"||(allowed[role]||["overview"]).includes(page);
  return <div className="role-portal">
   <div className="role-banner"><div><strong>{names[role]||role}</strong><span>{session.user.email}</span></div><button onClick={async()=>{try{await api.logout();}finally{setSession(null);setMembers([]);setSchools([]);setProfile(null);setChildren([]);setNeedsSelection(false);onRole?.("");}}}>تسجيل الخروج</button></div>
   {error&&<p className="live-error" role="alert">{error}</p>}
   {page==="overview"&&<VoiceNotificationSettings role={role}/>}
   {!permitted?<section className="live-panel"><h2>غير مصرح</h2><p>هذه الصفحة غير متاحة لدورك الحالي. اختر صفحة مسموحة من القائمة.</p></section>:
   ["student","parent"].includes(role)?<FamilyPortal role={role as "student"|"parent"} page={page}/>:
+  page==="notifications"?<NotificationInbox/>:
   page==="homework"?<HomeworkPanel role={role}/>:
   page==="learning"?<LearningPanel role={role} schools={schools}/>:
   page==="attendance"?<AttendancePanel role={role} schools={schools} children={children}/>:
