@@ -20,7 +20,7 @@ async function call<T>(path: string, options: RequestInit = {}): Promise<T> {
   return data as T;
 }
 export const api = {
-  login: async (email: string, password: string, tenant_id: string) => {
+  login: async (email: string, password: string, tenant_id?: string) => {
     const result = await call<SessionInfo & { csrf_token: string }>("/auth/login", {
       method: "POST", body: JSON.stringify({ email, password, tenant_id })
     });
