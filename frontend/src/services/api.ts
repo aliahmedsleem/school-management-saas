@@ -53,6 +53,7 @@ export const api = {
   homeworkCreate: (data:{assignment_id:string;title:string;description:string;due_at:string}) => call<{item:{id:string};recipients:number}>("/homework",{method:"POST",body:JSON.stringify(data)}),
   notifications: () => call<{items:{id:string;kind:string;title:string;body:string;target_path:string;created_at:string;read_at:string|null}[];unread:number}>("/notifications"),
   notificationRead: (id:string) => call(`/notifications/${encodeURIComponent(id)}/read`,{method:"POST"}),
+  ownerOverview: () => call<{tenant:{id:string;name:string;status:string}|null;schools_count:number;accounts_count:number;subscription_status:string|null;schools:{id:string;name:string}[]}>("/owner/overview"),
   schools: () => call<{ items: School[] }>("/schools"),
   subscription: () => call<{ subscription: { id: string; status: string; plan_id: string } | null }>("/subscription"),
   addSchool: (name: string) => call<School>("/schools", { method: "POST", body: JSON.stringify({ name }) }),
