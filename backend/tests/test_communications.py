@@ -1,8 +1,9 @@
 """Smoke tests for additive communication schema and tenant-isolated inbox."""
 import pytest
 from app import create_app, db
-from app.models import Tenant, User, Membership
+from app.models import Tenant, User, Membership, School
 from app.notification_models import Notification, Homework
+from sqlalchemy import select
 from app.notifications import enqueue
 
 @pytest.fixture()
@@ -116,3 +117,29 @@ def test_notification_mark_read_cannot_access_other_user(app):
         assert response.status_code==404
         db.session.refresh(note)
         assert note.read_at is None
+
+def test_school_notice_reaches_tenant_wide_member_only(app):
+    with app.app_context():
+        tenant=Tenant(name="Group")
+        school=School(tenant_id=None,name="Campus")
+        another=School(tenant_id=None,name="Other campus")
+        global_member=User(email="group-owner@example.test",password_hash="test")
+        school_member=User(email="campus-parent@example.test",password_hash="test")
+        other_member=User(email="other-parent@example.test",password_hash="test")
+        db.session.add_all([tenant,global_member,school_member,other_member])
+        db.session.flush()
+        school.tenant_id=tenant.id
+        another.tenant_id=tenant.id
+        db.session.add_all([school,another])
+        db.session.flush()
+        db.session.add_all([
+            Membership(tenant_id=tenant.id,user_id=global_member.id,role="owner"),
+            Membership(tenant_id=tenant.id,school_id=school.id,user_id=school_member.id,role="parent"),
+            Membership(tenant_id=tenant.id,school_id=another.id,user_id=other_member.id,role="parent"),
+        ])
+        db.session.flush()
+        assert enqueue(tenant.id,[global_member.id,school_member.id,other_member.id],
+                       "attendance","Alert","Body",school_id=school.id)==2
+        db.session.commit()
+        assert {n.recipient_id for n in db.session.scalars(select(Notification)).all()}=={
+            global_member.id,school_member.id}
