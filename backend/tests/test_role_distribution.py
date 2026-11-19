@@ -26,6 +26,9 @@ def test_account_distribution_is_role_scoped():
     assert client.post("/api/portals/accounts",json={"email":"other-principal@example.test","password":"long-password-123","role":"principal","school_id":sid},headers=principal_headers).status_code==403
     assert client.post("/api/portals/accounts",json={"email":"wrong-school@example.test","password":"long-password-123","role":"teacher","school_id":other_id},headers=principal_headers).status_code==403
     registrar_headers=login("registrar")
+    assert client.post("/api/academics/teachers",json={"school_id":sid,"full_name":"Not Allowed","employee_code":"T2"},headers=registrar_headers).status_code==403
+    assert client.post("/api/academics/grades",json={"school_id":sid,"name":"Second"},headers=registrar_headers).status_code==403
+    assert client.post("/api/learning/subjects",json={"school_id":sid,"name":"Math"},headers=registrar_headers).status_code==403
     assert client.post("/api/portals/accounts",json={"email":"new-teacher@example.test","password":"long-password-123","role":"teacher","school_id":sid},headers=registrar_headers).status_code==403
     assert client.post("/api/portals/accounts",json={"email":"new-parent@example.test","password":"long-password-123","role":"parent","school_id":sid,"record_id":student_id},headers=registrar_headers).status_code==201
     items=client.get("/api/portals/accounts").json["items"]
