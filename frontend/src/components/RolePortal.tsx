@@ -6,6 +6,7 @@ import FamilyPortal from "./FamilyPortal";
 import VoiceNotificationSettings from "./VoiceNotificationSettings";
 import HomeworkPanel from "./HomeworkPanel";
 import NotificationInbox from "./NotificationInbox";
+import NotificationVoiceListener from "./NotificationVoiceListener";
 import { api, type SessionInfo, type MembershipInfo } from "../services/api";
 import "./academic.css";
 
@@ -87,6 +88,7 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
  const role=session.role;
  const permitted=page==="notifications"||(allowed[role]||["overview"]).includes(page);
  return <div className="role-portal">
+  <NotificationVoiceListener/>
   <div className="role-banner"><div><strong>{names[role]||role}</strong><span>{session.user.email}</span></div><button onClick={async()=>{try{await api.logout();}finally{setSession(null);setMembers([]);setSchools([]);setProfile(null);setChildren([]);setNeedsSelection(false);onRole?.("");}}}>تسجيل الخروج</button></div>
   {error&&<p className="live-error" role="alert">{error}</p>}
   {page==="overview"&&<VoiceNotificationSettings role={role}/>}
