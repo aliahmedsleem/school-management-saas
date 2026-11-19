@@ -20,7 +20,7 @@ def context():
     school_ids = {m.school_id for m in members if m.school_id}
     if selected.school_id:
         school_ids = {selected.school_id}
-    schools = db.session.scalars(select(School).where(School.tenant_id == g.tenant_id, School.id.in_(school_ids))).all() if school_ids else []
+    schools = db.session.scalars(select(School).where(School.tenant_id == g.tenant_id, *([School.id.in_(school_ids)] if selected.school_id else []))).all()
     return jsonify(role=selected.role, school_id=selected.school_id,
                    schools=[{"id": s.id, "name": s.name} for s in schools],
                    memberships=[{"id": m.id, "role": m.role, "school_id": m.school_id} for m in members])
