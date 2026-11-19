@@ -26,7 +26,7 @@ def require_membership(*roles):
             selected_id = session.get("membership_id")
             selected = next((m for m in eligible if m.id == selected_id), None)
             if selected_id and selected is None:
-                return jsonify(error="school_selection_required"), 403
+                return jsonify(error="forbidden"), 403
             tenant_wide = next((m for m in eligible if m.school_id is None), None)
             if selected:
                 membership = selected
@@ -35,7 +35,7 @@ def require_membership(*roles):
             else:
                 # No active school-selection mechanism exists yet: fail closed.
                 school_ids = {m.school_id for m in eligible}
-                if len(school_ids) != 1:
+                if len(eligible) != 1:
                     return jsonify(error="school_selection_required"), 403
                 membership = eligible[0]
             g.tenant_id = tenant_id
