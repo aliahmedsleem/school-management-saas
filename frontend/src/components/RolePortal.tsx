@@ -34,7 +34,7 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
  const [guardianStudents,setGuardianStudents]=useState<{id:string;full_name:string;student_code:string}[]>([]);
  const [busy,setBusy]=useState(false);
  const [needsSelection,setNeedsSelection]=useState(false);
- useEffect(()=>{api.me().then(async s=>{setSession(s);onRole?.(s.role);try {const c=await api.portalContext();setMembers(c.memberships);setSchools(c.schools);}catch{setNeedsSelection(true);}}).catch(()=>{}).finally(()=>setLoading(false));},[]);
+ useEffect(()=>{api.me().then(async s=>{setSession(s);onRole?.(s.role);try {const c=await api.portalContext();setMembers(c.memberships);setSchools(c.schools);}catch{setNeedsSelection(true);}}).catch(async()=>{try{const pending=await api.pending();if(pending.selection_required){setMembers(pending.memberships);setSession({...pending,role:""});setNeedsSelection(true);}}catch{/* unauthenticated */}}).finally(()=>setLoading(false));},[]);
  useEffect(()=>{
   if(!session)return;
   if(session.role==="parent")api.myStudents().then(r=>setChildren(r.items)).catch(()=>{});
