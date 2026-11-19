@@ -12,7 +12,7 @@ import "./academic.css";
 
 const names: Record<string,string> = {owner:"مدير النظام",principal:"إدارة المدرسة",registrar:"المعاون / شؤون الطلبة",teacher:"المدرس",student:"الطالب",parent:"ولي الأمر"};
 const allowed: Record<string,string[]> = {
- owner:["overview","schools","subscriptions","accounts","students","teachers","classes","onboarding","attendance","learning"],
+ owner:["overview","schools","subscriptions","accounts"],
  principal:["overview","accounts","students","teachers","classes","onboarding","attendance","learning"],
  registrar:["overview","accounts","students","classes","onboarding","attendance","learning"],
  teacher:["overview","profile","learning","homework"], student:["overview","attendance","learning","homework"],parent:["overview","attendance","learning","homework"]
