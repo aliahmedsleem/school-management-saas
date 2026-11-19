@@ -136,3 +136,18 @@ class GuardianStudent(db.Model):
     user_id = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False, index=True)
     student_id = db.Column(db.String(36), db.ForeignKey("students.id"), nullable=False)
     __table_args__ = (db.UniqueConstraint("user_id", "student_id", name="uq_guardian_student"),)
+
+class AttendanceRecord(db.Model):
+    __tablename__ = "attendance_records"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    tenant_id = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
+    school_id = db.Column(db.String(36), db.ForeignKey("schools.id"), nullable=False, index=True)
+    student_id = db.Column(db.String(36), db.ForeignKey("students.id"), nullable=False, index=True)
+    day = db.Column(db.Date, nullable=False)
+    status = db.Column(db.String(16), nullable=False)
+    note = db.Column(db.String(250), nullable=False, default="")
+    recorded_by = db.Column(db.String(36), db.ForeignKey("users.id"), nullable=False)
+    __table_args__ = (
+        db.UniqueConstraint("school_id", "student_id", "day", name="uq_attendance_school_student_day"),
+        db.CheckConstraint("status IN ('present','absent','late','excused')", name="ck_attendance_status"),
+    )
