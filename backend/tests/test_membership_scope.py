@@ -25,4 +25,4 @@ def test_ambiguous_school_memberships_fail_closed():
     assert login.status_code == 200
     response = client.get("/api/academics/students", query_string={"school_id": school_id})
     assert response.status_code == 403
-    assert response.json["error"] == "school_selection_required"
+    assert response.json["error"] == "membership_selection_required"
