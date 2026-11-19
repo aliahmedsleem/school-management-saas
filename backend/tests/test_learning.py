@@ -32,6 +32,10 @@ def test_grades_are_scoped_to_enrolled_student_and_linked_family():
     teacher_login=client.post("/api/auth/login",json={"email":"teacher@example.test","password":"secure-password-123","tenant_id":tid})
     token=teacher_login.json["csrf_token"]
     payload={"school_id":sid,"student_id":student_id,"assignment_id":assignment_id,"assessment":"First month","score":87,"max_score":100}
+    roster=client.get(f"/api/learning/teacher-roster?assignment_id={assignment_id}")
+    assert roster.status_code==200
+    assert [x["id"] for x in roster.json["items"]]==[student_id]
+    assert client.post("/api/learning/grades",json={**payload,"score":float("inf")},headers={"X-CSRF-Token":token}).status_code==400
     assert client.post("/api/learning/grades",json=payload,headers={"X-CSRF-Token":token}).status_code==200
     assert client.post("/api/learning/subjects",json={"school_id":sid,"name":"Physics"},headers={"X-CSRF-Token":token}).status_code==403
     for role in ("student","parent"):
