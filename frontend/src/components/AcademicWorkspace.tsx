@@ -38,7 +38,7 @@ export default function AcademicWorkspace({ page }: { page: string }) {
   const [references, setReferences] = useState<Record<string, AcademicRow[]>>({});
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
-  const effectiveKind = activeKind || kind;
+  const effectiveKind = ["students","classes","teachers","onboarding"].includes(page) ? kind : (activeKind || kind);
   const selected = kinds.find(k => k.key === effectiveKind)!;
 
   async function loadSchools() {
@@ -51,11 +51,11 @@ export default function AcademicWorkspace({ page }: { page: string }) {
   useEffect(() => { if (session && (page === "subscriptions" || page === "overview")) api.subscription().then(r => setSubscription(r.subscription)).catch(e => setError(message(e))); }, [session, page]);
   useEffect(() => { if (session) loadSchools().catch(e => setError(message(e))); }, [session]);
   useEffect(() => {
-    if (!session || !schoolId) { setRows([]); return; }
+    if (!session || !schoolId || (!activeKind && page !== "academics")) { setRows([]); return; }
     let cancelled = false;
     api.list(effectiveKind, schoolId).then(r => { if (!cancelled) setRows(r.items); }).catch(e => { if (!cancelled) setError(message(e)); });
     return () => { cancelled = true; };
-  }, [session, schoolId, effectiveKind]);
+  }, [session, schoolId, effectiveKind, page, activeKind]);
   async function login(e: React.FormEvent) {
     e.preventDefault(); setBusy(true); setError("");
     try { const result = await api.login(email, password, tenant); setSession(result); setPassword(""); }
@@ -84,7 +84,7 @@ export default function AcademicWorkspace({ page }: { page: string }) {
   {error&&<p role="alert" className="live-error">{error}</p>}
   <label>المدرسة<select value={schoolId} onChange={e=>setSchoolId(e.target.value)}>{schools.map(s=><option key={s.id} value={s.id}>{s.name}</option>)}</select></label>
   {session.role==="owner"&&<form className="live-inline" onSubmit={addSchool}><input aria-label="اسم المدرسة الجديدة" required maxLength={200} value={schoolName} onChange={e=>setSchoolName(e.target.value)} placeholder="اسم مدرسة جديدة"/><button disabled={busy}>إضافة مدرسة</button></form>}
-  {page === "subscriptions" ? <div className="live-panel"><h3>الاشتراك الحالي</h3>{subscription ? <p>الحالة: {subscription.status} — الخطة: {subscription.plan_id}</p> : <p>لا يوجد اشتراك مسجل.</p>}</div> : page === "schools" ? <div className="table-wrap"><table><thead><tr><th>المدرسة</th><th>الدولة</th><th>المنطقة الزمنية</th></tr></thead><tbody>{schools.map(s=><tr key={s.id}><td>{s.name}</td><td>{s.country_code}</td><td>{s.timezone}</td></tr>)}</tbody></table></div> : page === "overview" ? <div className="live-panel"><h3>ملخص المدرسة</h3><p>المدارس المتاحة: {schools.length}</p><p>الاشتراك: {subscription?.status || "غير محدد"}</p></div> : !activeKind && page !== "academics" ? <p role="status">هذه الوحدة غير مرتبطة بالـ API بعد. لن تُعرض بيانات تجريبية في الوضع الفعلي.</p> : <><div className="live-tabs">{kinds.map(k=><button type="button" key={k.key} aria-pressed={effectiveKind===k.key} onClick={()=>{setKind(k.key);setForm({});setEditingId(null);setError("");}}>{k.title}</button>)}</div>
+  {page === "subscriptions" ? <div className="live-panel"><h3>الاشتراك الحالي</h3>{subscription ? <p>الحالة: {subscription.status} — الخطة: {subscription.plan_id}</p> : <p>لا يوجد اشتراك مسجل.</p>}</div> : page === "schools" ? <div className="table-wrap"><table><thead><tr><th>المدرسة</th><th>الدولة</th><th>المنطقة الزمنية</th></tr></thead><tbody>{schools.map(s=><tr key={s.id}><td>{s.name}</td><td>{s.country_code}</td><td>{s.timezone}</td></tr>)}</tbody></table></div> : page === "overview" ? <div className="live-panel"><h3>ملخص المدرسة</h3><p>المدارس المتاحة: {schools.length}</p><p>الاشتراك: {subscription?.status || "غير محدد"}</p></div> : !activeKind && page !== "academics" ? <p role="status">هذه الوحدة غير مرتبطة بالـ API بعد. لن تُعرض بيانات تجريبية في الوضع الفعلي.</p> : <><div className="live-tabs">{(page === "students" ? kinds.filter(k=>["students","enrollments"].includes(k.key)) : page === "classes" ? kinds.filter(k=>["grades","sections","years"].includes(k.key)) : page === "teachers" ? kinds.filter(k=>k.key==="teachers") : page === "onboarding" ? kinds.filter(k=>["years","grades","sections"].includes(k.key)) : kinds).map(k=><button type="button" key={k.key} aria-pressed={effectiveKind===k.key} onClick={()=>{setKind(k.key);setForm({});setEditingId(null);setError("");}}>{k.title}</button>)}</div>
   <div className="table-wrap"><table><thead><tr>{selected.fields.map(f=><th key={f.name}>{f.label}</th>)}<th>المعرف</th><th>الإجراءات</th></tr></thead><tbody>{rows.map(r=><tr key={r.id}>{selected.fields.map(f=><td key={f.name}>{r[f.name]||"—"}</td>)}<td><code>{r.id}</code></td><td><button type="button" onClick={()=>{setEditingId(r.id);setForm(Object.fromEntries(selected.fields.map(f=>[f.name,r[f.name]||""])));}}>تعديل</button></td></tr>)}</tbody></table>{!rows.length&&<p>لا توجد سجلات حالياً.</p>}</div>
   {["owner","principal","registrar"].includes(session.role)&&schoolId&&<form className="live-form" onSubmit={create}><h3>{editingId?"تعديل":"إضافة"} {selected.title}</h3>{selected.fields.map(f=><label key={f.name}>{f.label}{({grade_level_id:"grades",student_id:"students",academic_year_id:"years",section_id:"sections"} as Record<string,string>)[f.name] ? <select required value={form[f.name]||""} onChange={e=>setForm(v=>({...v,[f.name]:e.target.value}))}><option value="">اختر {f.label}</option>{(references[({grade_level_id:"grades",student_id:"students",academic_year_id:"years",section_id:"sections"} as Record<string,string>)[f.name]]||[]).map(r=><option key={r.id} value={r.id}>{r.name||r.full_name||r.id}</option>)}</select> : <input required maxLength={200} value={form[f.name]||""} onChange={e=>setForm(v=>({...v,[f.name]:e.target.value}))}/>}</label>)}<div className="live-inline"><button disabled={busy}>{editingId?"حفظ التعديل":"حفظ في قاعدة البيانات"}</button>{editingId&&<button type="button" onClick={()=>{setEditingId(null);setForm({});}}>إلغاء التعديل</button>}</div></form>}
   </>}
