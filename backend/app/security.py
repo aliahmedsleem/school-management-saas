@@ -27,7 +27,6 @@ def require_membership(*roles):
             selected = next((m for m in eligible if m.id == selected_id), None)
             if selected_id and selected is None:
                 return jsonify(error="forbidden"), 403
-            tenant_wide = next((m for m in eligible if m.school_id is None), None)
             if selected:
                 membership = selected
             elif selected_id:
