@@ -1,0 +1,21 @@
+services:
+  schoolcloud:
+    build: .
+    restart: unless-stopped
+    env_file:
+      - .env.staging
+    environment:
+      ENVIRONMENT: staging
+      COOKIE_SECURE: "true"
+      DATABASE_URL: sqlite:////srv/data/staging.db
+    volumes:
+      - schoolcloud_staging_data:/srv/data
+    ports:
+      - "127.0.0.1:8088:8000"
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/api/health', timeout=3)"]
+      interval: 30s
+      timeout: 5s
+      retries: 3
+volumes:
+  schoolcloud_staging_data:
