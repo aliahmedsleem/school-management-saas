@@ -130,3 +130,31 @@ def mine():
     return jsonify(grades=[{"student_id":x.student_id,"subject":subject_by_assignment.get(x.assignment_id,""),"assessment":x.assessment,"score":x.score,"max_score":x.max_score} for x in grades],
                    timetable=[{"assignment_id":x.assignment_id,"subject":subject_by_assignment.get(x.assignment_id,""),"weekday":x.weekday,"period":x.period} for x in lessons],
                    students=[{"id":s.id,"name":s.full_name} for s in students])
+
+@learning.get("/teacher-roster")
+@require_membership("teacher")
+def teacher_roster():
+    assignment_id = request.args.get("assignment_id")
+    link = db.session.scalar(select(TeacherAccount).where(TeacherAccount.user_id == g.user_id))
+    if not link:
+        return jsonify(error="teacher_account_not_linked"), 404
+    assignment = db.session.scalar(select(TeachingAssignment).where(
+        TeachingAssignment.id == assignment_id,
+        TeachingAssignment.teacher_id == link.teacher_id,
+        TeachingAssignment.tenant_id == g.tenant_id,
+        *([TeachingAssignment.school_id == g.membership.school_id] if g.membership.school_id else [])
+    ))
+    if not assignment:
+        return jsonify(error="forbidden"), 403
+    enrollments = db.session.scalars(select(StudentEnrollment).where(
+        StudentEnrollment.tenant_id == g.tenant_id,
+        StudentEnrollment.school_id == assignment.school_id,
+        StudentEnrollment.section_id == assignment.section_id
+    )).all()
+    student_ids = [e.student_id for e in enrollments]
+    students = db.session.scalars(select(Student).where(
+        Student.id.in_(student_ids),
+        Student.tenant_id == g.tenant_id,
+        Student.school_id == assignment.school_id
+    ).order_by(Student.full_name)).all() if student_ids else []
+    return jsonify(items=[{"id":s.id,"name":s.full_name,"student_code":s.student_code} for s in students])
