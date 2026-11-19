@@ -85,10 +85,16 @@ def list_homework():
             student_ids=select(StudentAccount.student_id).where(StudentAccount.user_id==g.user_id)
         else:
             student_ids=select(GuardianStudent.student_id).where(GuardianStudent.user_id==g.user_id)
+        authorized_students=select(Student.id).where(
+            Student.tenant_id==g.tenant_id, Student.id.in_(student_ids),
+            *([Student.school_id==g.membership.school_id] if g.membership.school_id else []))
         section_ids=select(StudentEnrollment.section_id).where(
-            StudentEnrollment.tenant_id==g.tenant_id,StudentEnrollment.student_id.in_(student_ids))
+            StudentEnrollment.tenant_id==g.tenant_id,
+            StudentEnrollment.student_id.in_(authorized_students),
+            *([StudentEnrollment.school_id==g.membership.school_id] if g.membership.school_id else []))
         assignment_ids=select(TeachingAssignment.id).where(
-            TeachingAssignment.tenant_id==g.tenant_id,TeachingAssignment.section_id.in_(section_ids))
+            TeachingAssignment.tenant_id==g.tenant_id,TeachingAssignment.section_id.in_(section_ids),
+            *([TeachingAssignment.school_id==g.membership.school_id] if g.membership.school_id else []))
         query=query.where(Homework.assignment_id.in_(assignment_ids))
     rows=db.session.scalars(query.order_by(Homework.created_at.desc()).limit(100)).all()
     return jsonify(items=[serialize(x) for x in rows])
