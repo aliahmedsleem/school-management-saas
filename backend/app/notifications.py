@@ -2,7 +2,7 @@ from datetime import datetime, timezone
 from flask import Blueprint, jsonify, g
 from sqlalchemy import select, func
 from . import db
-from .models import User, Membership
+from .models import User, Membership, School
 from .notification_models import Notification
 from .security import require_membership
 
@@ -16,6 +16,9 @@ def enqueue(tenant_id, recipient_ids, kind, title, body, school_id=None, actor_i
     """Queue notifications in the caller's current transaction. Do not commit here."""
     ids=set(recipient_ids)
     if not ids:return 0
+    if school_id and not db.session.scalar(select(School.id).where(
+        School.id==school_id, School.tenant_id==tenant_id)):
+        raise ValueError("school_outside_tenant")
     valid=set(db.session.scalars(select(User.id).join(Membership, Membership.user_id==User.id).where(
         User.id.in_(ids), User.is_active.is_(True), Membership.tenant_id==tenant_id,
         *([Membership.school_id==school_id] if school_id else [])
