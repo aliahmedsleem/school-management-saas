@@ -124,7 +124,11 @@ def mine():
         assignments=db.session.scalars(select(TeachingAssignment).where(TeachingAssignment.teacher_id==link.teacher_id,TeachingAssignment.tenant_id==g.tenant_id,*([TeachingAssignment.school_id==g.membership.school_id] if g.membership.school_id else []))).all() if link else []
         ids=[a.id for a in assignments]
         lessons=db.session.scalars(select(TimetableEntry).where(TimetableEntry.assignment_id.in_(ids),TimetableEntry.tenant_id==g.tenant_id)).all() if ids else []
-        return jsonify(assignments=[{"id":a.id,"section_id":a.section_id,"subject_id":a.subject_id,"school_id":a.school_id} for a in assignments],timetable=[{"assignment_id":x.assignment_id,"weekday":x.weekday,"period":x.period} for x in lessons],grades=[])
+        subjects=db.session.scalars(select(Subject).where(Subject.tenant_id==g.tenant_id,Subject.id.in_([a.subject_id for a in assignments]))).all() if assignments else []
+        subject_names={s.id:s.name for s in subjects}
+        sections=db.session.scalars(select(ClassSection).where(ClassSection.tenant_id==g.tenant_id,ClassSection.id.in_([a.section_id for a in assignments]))).all() if assignments else []
+        section_names={s.id:s.name for s in sections}
+        return jsonify(assignments=[{"id":a.id,"section_id":a.section_id,"subject_id":a.subject_id,"school_id":a.school_id,"subject":subject_names.get(a.subject_id,""),"section":section_names.get(a.section_id,"")} for a in assignments],timetable=[{"assignment_id":x.assignment_id,"weekday":x.weekday,"period":x.period} for x in lessons],grades=[])
     if role=="student":
         link=db.session.scalar(select(StudentAccount).where(StudentAccount.user_id==g.user_id))
         ids=[link.student_id] if link else []
