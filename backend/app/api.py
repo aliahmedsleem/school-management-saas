@@ -41,7 +41,7 @@ def logout():
 @require_membership()
 def me():
     user = db.session.get(User, g.user_id)
-    return jsonify(user={"id": user.id, "email": user.email}, tenant_id=g.tenant_id, role=g.membership.role, csrf_token=session.get("csrf_token"))
+    return jsonify(user={"id": user.id, "email": user.email}, tenant_id=g.tenant_id, role=g.membership.role, csrf_token=session.get("csrf_token"), memberships=[{"id":m.id,"role":m.role,"school_id":m.school_id} for m in db.session.scalars(select(Membership).where(Membership.user_id==g.user_id,Membership.tenant_id==g.tenant_id)).all()])
 
 @api.get("/schools")
 @require_membership("owner", "principal", "registrar")
