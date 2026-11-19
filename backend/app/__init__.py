@@ -28,11 +28,12 @@ def create_app(test_config=None):
     from .api import api
     from .academics import academics
     from .portals import portals
-    from .cli import bootstrap_demo
+    from .cli import bootstrap_demo, bootstrap_staging
     app.register_blueprint(api)
     app.register_blueprint(academics)
     app.register_blueprint(portals)
     app.cli.add_command(bootstrap_demo)
+    app.cli.add_command(bootstrap_staging)
 
     @app.before_request
     def csrf_protection():
