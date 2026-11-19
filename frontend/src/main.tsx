@@ -1,93 +1,43 @@
-import React, { useMemo, useState } from "react";
-import { createRoot } from "react-dom/client";
-import "./style.css";
+import React,{useState} from "react";
+import {createRoot} from "react-dom/client";
 import RolePortal from "./components/RolePortal";
 import InstallApp from "./components/InstallApp";
+import "./style.css";
+import "./components/academic.css";
 
-type Role = "platform" | "school" | "teacher" | "parent" | "student";
-type RecordRow = Record<string, string | number>;
-const demo: Record<string, {title:string; headers:string[]; rows:RecordRow[]}> = {
-
-  accounts:{title:"حسابات المستخدمين",headers:["الاسم","البريد الإلكتروني","الدور","الحالة"],rows:[{"الاسم":"مدير المدرسة","البريد الإلكتروني":"admin@example.test","الدور":"مدير","الحالة":"نشط"}]},
-  permissions:{title:"الأدوار والصلاحيات",headers:["الدور","النطاق","صلاحية العرض","صلاحية التعديل"],rows:[{"الدور":"مدير المدرسة","النطاق":"مدرسة","صلاحية العرض":"نعم","صلاحية التعديل":"نعم"},{"الدور":"المدرس","النطاق":"شعبه المسندة","صلاحية العرض":"نعم","صلاحية التعديل":"محدد"}]},
-  invoices:{title:"الفواتير والمدفوعات",headers:["رقم الفاتورة","المدرسة","المبلغ","العملة","الحالة"],rows:[{"رقم الفاتورة":"INV-DEMO-001","المدرسة":"مدرسة المستقبل","المبلغ":"150000","العملة":"IQD","الحالة":"غير مدفوع"}]},
-  plans:{title:"خطط الاشتراك",headers:["الخطة","الدورة","العملة","الحالة"],rows:[{"الخطة":"Basic","الدورة":"شهري","العملة":"IQD","الحالة":"متاح"},{"الخطة":"Professional","الدورة":"سنوي","العملة":"IQD","الحالة":"متاح"}]},
-  attendance:{title:"الحضور والغياب",headers:["الطالب","التاريخ","الحصة","الحالة"],rows:[{"الطالب":"أحمد محمد","التاريخ":"2026-11-19","الحصة":"الأولى","الحالة":"حاضر"},{"الطالب":"نور علي","التاريخ":"2026-11-19","الحصة":"الثانية","الحالة":"غائب"}]},
-  exams:{title:"الامتحانات والتقييمات",headers:["الامتحان","المادة","الصف","التاريخ","الحالة"],rows:[{"الامتحان":"امتحان الشهر الأول","المادة":"رياضيات","الصف":"الثالث المتوسط","التاريخ":"2026-12-01","الحالة":"مجدول"}]},
-  assignments:{title:"تسليم الواجبات",headers:["الواجب","المادة","آخر موعد","التسليم","الحالة"],rows:[{"الواجب":"تمارين الفصل الأول","المادة":"رياضيات","آخر موعد":"2026-11-25","التسليم":"12/28","الحالة":"مفتوح"}]},
-  resources:{title:"الملفات والمكتبة",headers:["الملف","النوع","المادة","الوصول"],rows:[{"الملف":"كتاب الرياضيات","النوع":"PDF","المادة":"رياضيات","الوصول":"طلبة الصف"}]},
-  messages:{title:"الرسائل",headers:["المرسل","الموضوع","التاريخ","الحالة"],rows:[{"المرسل":"إدارة المدرسة","الموضوع":"موعد اجتماع","التاريخ":"2026-11-19","الحالة":"غير مقروء"}]},
-  notifications:{title:"مركز الإشعارات",headers:["الإشعار","القناة","المستلم","الحالة"],rows:[{"الإشعار":"نشر نتيجة","القناة":"داخل التطبيق","المستلم":"ولي الأمر","الحالة":"مسودة"}]},
-  audit:{title:"سجل النشاط",headers:["الحدث","المستخدم","الوقت","النتيجة"],rows:[{"الحدث":"دخول تجريبي","المستخدم":"مدير المدرسة","الوقت":"09:00","النتيجة":"عرض فقط"}]},
-  profile:{title:"الملف الشخصي",headers:["الخاصية","القيمة"],rows:[{"الخاصية":"الاسم","القيمة":"مستخدم تجريبي"},{"الخاصية":"اللغة","القيمة":"العربية"},{"الخاصية":"المنطقة الزمنية","القيمة":"Asia/Baghdad"}]},
-  onboarding:{title:"تهيئة المدرسة",headers:["الخطوة","الوصف","الحالة"],rows:[{"الخطوة":"البيانات الأساسية","الوصف":"اسم المدرسة والدولة","الحالة":"مكتمل"},{"الخطوة":"العام الدراسي","الوصف":"تحديد التقويم","الحالة":"قيد الإعداد"},{"الخطوة":"الصفوف والشعب","الوصف":"بناء الهيكل الأكاديمي","الحالة":"بانتظار"}]},
-  calendar:{title:"التقويم الأكاديمي",headers:["الحدث","التاريخ","النوع","الحالة"],rows:[{"الحدث":"بداية الفصل","التاريخ":"2026-10-01","النوع":"دراسي","الحالة":"مجدول"}]},
-  support:{title:"الدعم الفني",headers:["رقم التذكرة","الموضوع","الأولوية","الحالة"],rows:[{"رقم التذكرة":"T-DEMO-01","الموضوع":"طلب مساعدة","الأولوية":"عادية","الحالة":"جديدة"}]},
-  results:{title:"نتائج الطلبة",headers:["الطالب","المادة","الدور","الدرجة","الحالة"],rows:[{"الطالب":"أحمد محمد","المادة":"رياضيات","الدور":"الأول","الدرجة":"87","الحالة":"غير معتمدة"}]},
-  schools:{title:"المدارس المشتركة",headers:["المدرسة","الدولة","النظام","الاشتراك","الحالة"],rows:[{"المدرسة":"مدرسة المستقبل","الدولة":"العراق","النظام":"العراقي","الاشتراك":"Professional","الحالة":"نشط"},{"المدرسة":"مدرسة النور","الدولة":"العراق","النظام":"العراقي","الاشتراك":"Basic","الحالة":"تجريبي"}]},
-  subscriptions:{title:"الاشتراكات والفوترة",headers:["المدرسة","الخطة","الدورة","الحالة"],rows:[{"المدرسة":"مدرسة المستقبل","الخطة":"Professional","الدورة":"سنوي","الحالة":"نشط"},{"المدرسة":"مدرسة النور","الخطة":"Basic","الدورة":"شهري","الحالة":"تجريبي"}]},
-  students:{title:"إدارة الطلبة",headers:["الطالب","الصف","الشعبة","الحالة"],rows:[{"الطالب":"أحمد محمد","الصف":"الثالث المتوسط","الشعبة":"أ","الحالة":"منتظم"},{"الطالب":"نور علي","الصف":"الثاني المتوسط","الشعبة":"ب","الحالة":"منتظم"}]},
-  teachers:{title:"الهيئة التدريسية",headers:["المدرس","المادة","الشعب","الحالة"],rows:[{"المدرس":"أ. سارة","المادة":"اللغة الإنكليزية","الشعب":"أ، ب","الحالة":"نشط"},{"المدرس":"أ. أحمد","المادة":"الرياضيات","الشعب":"أ","الحالة":"نشط"}]},
-  classes:{title:"الصفوف والشعب",headers:["المرحلة","الصف","الشعبة","الطلبة"],rows:[{"المرحلة":"المتوسطة","الصف":"الثالث","الشعبة":"أ","الطلبة":28},{"المرحلة":"المتوسطة","الصف":"الثاني","الشعبة":"ب","الطلبة":26}]},
-  subjects:{title:"المواد الدراسية",headers:["المادة","الصف","المدرس"],rows:[{"المادة":"الرياضيات","الصف":"الثالث المتوسط","المدرس":"أ. أحمد"},{"المادة":"الإنكليزية","الصف":"الثالث المتوسط","المدرس":"أ. سارة"}]},
-  grades:{title:"سجل الدرجات",headers:["الطالب","المادة","نوع التقييم","الدرجة","الحالة"],rows:[{"الطالب":"أحمد محمد","المادة":"الرياضيات","نوع التقييم":"شهري","الدرجة":"87/100","الحالة":"مسودة"},{"الطالب":"نور علي","المادة":"الإنكليزية","نوع التقييم":"شهري","الدرجة":"92/100","الحالة":"منشور"}]},
-  curricula:{title:"المناهج والموارد",headers:["العنوان","الصف","المادة","النوع"],rows:[{"العنوان":"كتاب الرياضيات","الصف":"الثالث المتوسط","المادة":"رياضيات","النوع":"PDF"},{"العنوان":"قواعد اللغة","الصف":"الثالث المتوسط","المادة":"عربي","النوع":"PDF"}]},
-  lessons:{title:"الدروس والواجبات",headers:["العنوان","المادة","الشعبة","التصنيف"],rows:[{"العنوان":"المعادلات الخطية","المادة":"رياضيات","الشعبة":"أ","التصنيف":"درس"},{"العنوان":"تمارين الوحدة الأولى","المادة":"إنكليزي","الشعبة":"أ","التصنيف":"واجب"}]},
-  announcements:{title:"التبليغات",headers:["العنوان","النطاق","الأولوية","الحالة"],rows:[{"العنوان":"اجتماع أولياء الأمور","النطاق":"المدرسة","الأولوية":"مهم","الحالة":"منشور"},{"العنوان":"اختبار الرياضيات","النطاق":"الثالث - أ","الأولوية":"عادي","الحالة":"منشور"}]},
-  guardians:{title:"أولياء الأمور",headers:["ولي الأمر","الطالب","صلة القرابة","الربط"],rows:[{"ولي الأمر":"محمد أحمد","الطالب":"أحمد محمد","صلة القرابة":"الأب","الربط":"معتمد"},{"ولي الأمر":"علي حسن","الطالب":"نور علي","صلة القرابة":"الأب","الربط":"بانتظار التحقق"}]},
-  reports:{title:"التقارير",headers:["التقرير","النطاق","الحالة"],rows:[{"التقرير":"توزيع الطلبة","النطاق":"المدرسة","الحالة":"متاح"},{"التقرير":"ملخص الدرجات","النطاق":"الشعبة","الحالة":"متاح"}]}
+type Role="owner"|"principal"|"registrar"|"teacher"|"student"|"parent"|null;
+type Item={key:string;label:string;icon:string};
+const menus:Record<Exclude<Role,null>,Item[]>={
+ owner:[{key:"overview",label:"لوحة مدير النظام",icon:"◫"},{key:"schools",label:"المدارس",icon:"▣"},{key:"accounts",label:"توزيع حسابات المدارس",icon:"♧"},{key:"subscriptions",label:"الاشتراكات",icon:"▤"},{key:"learning",label:"المواد والجداول",icon:"▦"},{key:"attendance",label:"الحضور",icon:"◉"}],
+ principal:[{key:"overview",label:"لوحة إدارة المدرسة",icon:"◫"},{key:"accounts",label:"الموظفون والحسابات",icon:"♧"},{key:"students",label:"الطلبة",icon:"♙"},{key:"teachers",label:"المدرسون",icon:"♧"},{key:"classes",label:"الصفوف والشعب",icon:"▦"},{key:"onboarding",label:"العام الدراسي",icon:"▣"},{key:"learning",label:"المواد والدرجات",icon:"▤"},{key:"attendance",label:"الحضور",icon:"◉"}],
+ registrar:[{key:"overview",label:"لوحة المعاون",icon:"◫"},{key:"students",label:"تسجيل الطلبة",icon:"♙"},{key:"classes",label:"الصفوف والشعب",icon:"▦"},{key:"onboarding",label:"توزيع الطلبة",icon:"▣"},{key:"accounts",label:"حسابات الطلبة والأهالي",icon:"♧"},{key:"attendance",label:"الحضور",icon:"◉"},{key:"learning",label:"المواد الدراسية",icon:"▤"}],
+ teacher:[{key:"overview",label:"لوحة المعلم",icon:"◫"},{key:"learning",label:"موادي وجدولي والدرجات",icon:"▦"},{key:"profile",label:"ملفي الوظيفي",icon:"♙"}],
+ student:[{key:"overview",label:"بوابة الطالب وولي الأمر",icon:"◫"},{key:"learning",label:"الدرجات والجدول",icon:"▦"},{key:"attendance",label:"الحضور والغياب",icon:"◉"}],
+ parent:[{key:"overview",label:"بوابة الطالب وولي الأمر",icon:"◫"},{key:"learning",label:"الدرجات والجدول",icon:"▦"},{key:"attendance",label:"الحضور والغياب",icon:"◉"}]
 };
-const navigation: Record<Role, {key:string;label:string;icon:string}[]> = {
- platform:[{key:"learning",label:"المواد والجداول",icon:"▦"},{key:"attendance",label:"الحضور والغياب",icon:"◉"},{key:"accounts",label:"الحسابات",icon:"♧"},{key:"permissions",label:"الصلاحيات",icon:"⚿"},{key:"plans",label:"الخطط",icon:"▤"},{key:"invoices",label:"الفواتير",icon:"▤"},{key:"audit",label:"سجل النشاط",icon:"▥"},{key:"support",label:"الدعم الفني",icon:"◉"},{key:"profile",label:"الملف الشخصي",icon:"♙"},{key:"overview",label:"الرئيسية",icon:"◫"},{key:"schools",label:"المدارس",icon:"▣"},{key:"subscriptions",label:"الاشتراكات",icon:"▤"},{key:"reports",label:"التقارير",icon:"▥"},{key:"settings",label:"الإعدادات",icon:"⚙"}],
- school:[{key:"learning",label:"المواد والدرجات",icon:"▦"},{key:"onboarding",label:"تهيئة المدرسة",icon:"▣"},{key:"calendar",label:"التقويم",icon:"▦"},{key:"attendance",label:"الحضور والغياب",icon:"◉"},{key:"exams",label:"الامتحانات",icon:"▥"},{key:"results",label:"النتائج",icon:"▥"},{key:"assignments",label:"تسليم الواجبات",icon:"▤"},{key:"resources",label:"المكتبة والملفات",icon:"▣"},{key:"accounts",label:"الحسابات",icon:"♧"},{key:"permissions",label:"الصلاحيات",icon:"⚿"},{key:"messages",label:"الرسائل",icon:"◉"},{key:"notifications",label:"الإشعارات",icon:"◉"},{key:"audit",label:"سجل النشاط",icon:"▥"},{key:"support",label:"الدعم الفني",icon:"◉"},{key:"profile",label:"الملف الشخصي",icon:"♙"},{key:"overview",label:"الرئيسية",icon:"◫"},{key:"students",label:"الطلبة",icon:"♙"},{key:"teachers",label:"المدرسون",icon:"♧"},{key:"classes",label:"الصفوف والشعب",icon:"▦"},{key:"subjects",label:"المواد",icon:"▤"},{key:"timetable",label:"الجداول",icon:"▦"},{key:"curricula",label:"المناهج",icon:"▣"},{key:"lessons",label:"الدروس والواجبات",icon:"▤"},{key:"grades",label:"الدرجات",icon:"▥"},{key:"guardians",label:"أولياء الأمور",icon:"♧"},{key:"announcements",label:"التبليغات",icon:"◉"},{key:"reports",label:"التقارير",icon:"▥"},{key:"settings",label:"الإعدادات",icon:"⚙"}],
- teacher:[{key:"learning",label:"جدولي وموادي",icon:"▦"},{key:"attendance",label:"الحضور والغياب",icon:"◉"},{key:"exams",label:"الامتحانات",icon:"▥"},{key:"assignments",label:"تسليم الواجبات",icon:"▤"},{key:"resources",label:"المكتبة",icon:"▣"},{key:"messages",label:"الرسائل",icon:"◉"},{key:"profile",label:"الملف الشخصي",icon:"♙"},{key:"overview",label:"الرئيسية",icon:"◫"},{key:"timetable",label:"جدولي",icon:"▦"},{key:"lessons",label:"الدروس والواجبات",icon:"▤"},{key:"curricula",label:"المناهج",icon:"▣"},{key:"grades",label:"الدرجات",icon:"▥"},{key:"announcements",label:"التبليغات",icon:"◉"}],
- parent:[{key:"learning",label:"الدرجات والجدول",icon:"▦"},{key:"attendance",label:"الحضور والغياب",icon:"◉"},{key:"results",label:"النتائج",icon:"▥"},{key:"messages",label:"الرسائل",icon:"◉"},{key:"notifications",label:"الإشعارات",icon:"◉"},{key:"profile",label:"الملف الشخصي",icon:"♙"},{key:"overview",label:"أبنائي",icon:"♧"},{key:"timetable",label:"الجدول",icon:"▦"},{key:"grades",label:"الدرجات",icon:"▥"},{key:"lessons",label:"الدروس والواجبات",icon:"▤"},{key:"announcements",label:"التبليغات",icon:"◉"}],
- student:[{key:"learning",label:"درجاتي وجدولي",icon:"▦"},{key:"attendance",label:"الحضور والغياب",icon:"◉"},{key:"results",label:"النتائج",icon:"▥"},{key:"assignments",label:"الواجبات",icon:"▤"},{key:"resources",label:"المكتبة",icon:"▣"},{key:"messages",label:"الرسائل",icon:"◉"},{key:"profile",label:"الملف الشخصي",icon:"♙"},{key:"overview",label:"الرئيسية",icon:"◫"},{key:"timetable",label:"جدولي",icon:"▦"},{key:"curricula",label:"المناهج",icon:"▣"},{key:"lessons",label:"الدروس والواجبات",icon:"▤"},{key:"grades",label:"نتائجي",icon:"▥"},{key:"announcements",label:"التبليغات",icon:"◉"}]
-};
-const days = ["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس"];
-const subjects = ["رياضيات","عربي","إنكليزي","فيزياء","أحياء","كيمياء"];
+const titles:Record<Exclude<Role,null>,string>={owner:"إدارة النظام",principal:"إدارة المدرسة",registrar:"المعاون / شؤون الطلبة",teacher:"المعلم",student:"الطالب وولي الأمر",parent:"الطالب وولي الأمر"};
 function App(){
- const [role,setRole]=useState<Role>("school");
- const [liveMode,setLiveMode]=useState(false);
+ const [role,setRole]=useState<Role>(null);
  const [page,setPage]=useState("overview");
- const [query,setQuery]=useState("");
- const [day,setDay]=useState("الأحد");
- const [child,setChild]=useState("أحمد محمد");
  const [menu,setMenu]=useState(false);
- const [dialog,setDialog]=useState(false);
- const [notice,setNotice]=useState("");
- const [rows,setRows]=useState<Record<string,RecordRow[]>>({});
- const [newValues,setNewValues]=useState<Record<string,string>>({});
- const livePages:Record<Role,string[]>={platform:["overview","schools","subscriptions","accounts","attendance","learning"],school:["overview","onboarding","students","teachers","classes","accounts","attendance","learning"],teacher:["overview","profile","learning"],student:["overview","profile","attendance","learning"],parent:["overview","attendance","learning"]};
- const nav=liveMode?navigation[role].filter(item=>livePages[role].includes(item.key)):navigation[role];
- const active=nav.find(x=>x.key===page)??nav[0];
- const data=demo[page];
- const displayed=useMemo(()=> (rows[page]??data?.rows??[]).filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(query.toLowerCase()))),[rows,page,data,query]);
- function switchRole(r:Role){setRole(r);setPage("overview");setQuery("");setMenu(false);}
- function addDemo(){if(!data)return;const row:RecordRow={};data.headers.forEach(h=>row[h]=newValues[h]?.trim()||"—");setRows(prev=>({...prev,[page]:[...(prev[page]??data.rows),row]}));setDialog(false);setNewValues({});}
- return <div className="shell">
- <aside className={"sidebar "+(menu?"open":"")}>
-  <div className="brand"><div className="brandmark">S</div><div><strong>SchoolCloud</strong><small>إدارة مدرسية ذكية</small></div></div>
-  <div className="nav-label">القائمة الرئيسية</div>
-  <nav>{nav.map(n=><button key={n.key} className={"nav-item "+(page===n.key?"selected":"")} onClick={()=>{setPage(n.key);setQuery("");setMenu(false);}}><span className="nav-icon">{n.icon}</span>{n.label}</button>)}</nav>
-  <div className="side-foot"><span className="status-dot"/> {liveMode?"وضع API تجريبي":"وضع المعاينة التجريبية"}</div>
- </aside>
- {menu&&<button className="scrim" aria-label="إغلاق القائمة" onClick={()=>setMenu(false)}/>}
- <div className="workspace">
-  <header className="topbar"><div className="top-start"><button className="hamburger" onClick={()=>setMenu(!menu)} aria-label="القائمة">☰</button><div><small>المنصة / {role==="platform"?"الإدارة المركزية":"مدرسة المستقبل النموذجية"}</small><strong>{active.label}</strong></div></div><div className="top-actions"><InstallApp/><button className="mode-toggle" onClick={()=>setLiveMode(v=>!v)}>{liveMode?"العودة للمعاينة":"البيانات الفعلية"}</button><span className="demo-pill">{liveMode?"API":"DEMO"}</span><select aria-label="تبديل نوع المستخدم" disabled={liveMode} title={liveMode?"تحدد الصلاحيات حسب الحساب المسجل":"تغيير دور المعاينة"} value={role} onChange={e=>switchRole(e.target.value as Role)}><option value="platform">مدير المنصة</option><option value="school">إدارة المدرسة</option><option value="teacher">المدرس</option><option value="parent">ولي الأمر</option><option value="student">الطالب</option></select><div className="avatar">ع</div></div></header>
+ const items=role?menus[role]:[];
+ function handleRole(next:string){
+  const normalized=(["owner","principal","registrar","teacher","student","parent"].includes(next)?next:null) as Role;
+  setRole(current=>{if(current!==normalized)setPage("overview");return normalized});
+  setMenu(false);
+ }
+ return <div className="shell" dir="rtl">
+  <aside className={"sidebar "+(menu?"open":"")}>
+   <div className="brand"><div className="brandmark">S</div><div><strong>SchoolCloud</strong><small>إدارة المدارس</small></div></div>
+   <div className="nav-label">{role?titles[role]:"تسجيل الدخول"}</div>
+   <nav aria-label="القائمة الرئيسية">{items.map(item=><button key={item.key} className={"nav-item "+(page===item.key?"selected":"")} onClick={()=>{setPage(item.key);setMenu(false)}}><span className="nav-icon">{item.icon}</span>{item.label}</button>)}</nav>
+   {!role&&<p className="sidebar-hint">تظهر الصفحات المصرح بها فقط بعد تسجيل الدخول.</p>}
+  </aside>
   <main className="content">
-   <div className="welcome"><div><div className="eyebrow">العام الدراسي 2026–2027 · العراق</div><h1>{page==="overview"?"مرحباً بك في لوحة التحكم":active.label}</h1><p>{role==="platform"?"إدارة المؤسسات التعليمية والاشتراكات من مكان واحد":role==="parent"?"تابع أبنائك وجداولهم ونتائجهم بكل سهولة":"نظام موحد لإدارة العملية التعليمية والموارد الدراسية"}</p></div><div className="welcome-badge">✦ <span>نسخة تطوير غير جاهزة للإنتاج</span></div></div>
-   {liveMode ? <RolePortal page={page} onRole={r=>{const roleMap:Record<string,Role>={owner:"platform",principal:"school",registrar:"school",teacher:"teacher",student:"student",parent:"parent"};const target=roleMap[r]||"school";setRole(target);setPage("overview");}}/> : <><div className="alert">هذه واجهة عرض ببيانات تجريبية فقط. التعديلات هنا مؤقتة داخل الصفحة ولا تُحفظ في الخادم.</div>
-   {role==="parent"&&<div className="child-selector"><label htmlFor="child">الطالب المحدد</label><select id="child" value={child} onChange={e=>setChild(e.target.value)}><option>أحمد محمد</option><option>نور علي</option></select><span>يمكن ربط عدة أبناء بالحساب بعد اعتماد الإدارة</span></div>}
-   {page==="overview"&&<><div className="stats">{(role==="platform"?[["المدارس","12","▣"],["الاشتراكات النشطة","9","◉"],["الحسابات","1,284","♧"],["طلبات التسجيل","3","▤"]]:role==="parent"?[["الأبناء المرتبطون","2","♧"],["الحصص اليوم","6","▦"],["التبليغات","3","◉"],["الواجبات","2","▤"]]:[["الطلبة","842","♙"],["المدرسون","48","♧"],["الشعب","24","▦"],["التبليغات","5","◉"]]).map(([name,value,icon])=><div className="stat" key={name}><div className="stat-icon">{icon}</div><span>{name}</span><strong>{value}</strong><small>بيانات توضيحية</small></div>)}</div><div className="dashboard-grid"><section className="panel"><div className="panel-head"><h2>الجدول الدراسي</h2><button className="text-button" onClick={()=>setPage("timetable")}>عرض الكل ←</button></div><div className="lesson-list">{subjects.slice(0,4).map((s,i)=><div className="lesson-item" key={s}><span className="time">{8+i}:00</span><span className="lesson-color"/><div><strong>{s}</strong><small>الثالث المتوسط — شعبة أ</small></div></div>)}</div></section><section className="panel"><div className="panel-head"><h2>آخر التبليغات</h2><button className="text-button" onClick={()=>setPage("announcements")}>عرض الكل ←</button></div><div className="notice"><span className="notice-icon">◉</span><div><strong>اجتماع أولياء الأمور</strong><p>تبليغ عام لجميع الصفوف والشعب</p><small>إدارة المدرسة</small></div></div><div className="notice"><span className="notice-icon">▤</span><div><strong>اختبار مادة الرياضيات</strong><p>الثالث المتوسط — شعبة أ</p><small>الهيئة التدريسية</small></div></div></section></div></>}
-   {page==="timetable"&&<section className="panel"><div className="panel-head"><div><h2>الجدول الأسبوعي</h2><p className="muted">الثالث المتوسط — شعبة أ · نموذج تجريبي</p></div><select aria-label="الشعبة"><option>الثالث المتوسط - أ</option><option>الثاني المتوسط - ب</option></select></div><div className="days">{days.map(d=><button key={d} className={day===d?"active":""} onClick={()=>setDay(d)}>{d}</button>)}</div><div className="table-wrap"><table><thead><tr><th>الحصة</th><th>الوقت</th><th>المادة</th><th>المدرس</th><th>القاعة</th></tr></thead><tbody>{Array.from({length:6},(_,i)=><tr key={i}><td>{i+1}</td><td>{8+i}:00</td><td><b>{subjects[(i+days.indexOf(day))%subjects.length]}</b></td><td>أ. {["أحمد","سارة","علي","محمد","زينب","حسين"][i]}</td><td>قاعة {i+1}</td></tr>)}</tbody></table></div></section>}
-   {data&&<section className="panel"><div className="panel-head"><div><h2>{data.title}</h2><p className="muted">السجلات التجريبية — عرض وتفاعل محلي</p></div><div className="table-actions"><input aria-label="بحث" placeholder="بحث في السجلات..." value={query} onChange={e=>setQuery(e.target.value)}/>{!["reports"].includes(page)&&role!=="parent"&&role!=="student"&&<button className="primary" onClick={()=>setDialog(true)}>+ إضافة جديد</button>}</div></div><div className="table-wrap"><table><thead><tr>{data.headers.map(h=><th key={h}>{h}</th>)}</tr></thead><tbody>{displayed.map((r,i)=><tr key={i}>{data.headers.map(h=><td key={h}>{h==="الحالة"||h==="الربط"?<span className="tag">{r[h]}</span>:r[h]}</td>)}</tr>)}</tbody></table>{!displayed.length&&<p className="empty">لا توجد نتائج مطابقة</p>}</div></section>}
-   {page==="settings"&&<section className="panel"><h2>إعدادات المدرسة والمنصة</h2><div className="settings-grid"><label>اسم المدرسة<input defaultValue="مدرسة المستقبل النموذجية"/></label><label>الدولة<select defaultValue="IQ"><option value="IQ">العراق</option><option value="AE">الإمارات</option><option value="SA">السعودية</option></select></label><label>النظام التعليمي<select defaultValue="iraqi"><option value="iraqi">النظام العراقي</option><option value="british">النظام البريطاني</option><option value="american">النظام الأمريكي</option></select></label><label>المنطقة الزمنية<input defaultValue="Asia/Baghdad"/></label></div><p className="muted">الإعدادات للعرض فقط؛ الحفظ سيتاح بعد ربط واجهة API والصلاحيات.</p></section>}
-   </>}
-   <footer>SchoolCloud SaaS · نسخة تطوير · لا تستخدم بيانات طلبة حقيقية قبل استكمال الحماية</footer>
+   <header className="topbar"><button className="menu-toggle" onClick={()=>setMenu(v=>!v)} aria-label="فتح القائمة">☰</button><div><strong>{role?titles[role]:"SchoolCloud"}</strong><small>واجهة مرتبطة بصلاحيات الحساب الفعلية</small></div><InstallApp/></header>
+   <RolePortal page={page} onRole={handleRole}/>
+   <footer>SchoolCloud · نسخة اختبار · يمنع استخدام بيانات مدرسية حقيقية قبل اعتماد الحماية والاختبارات</footer>
   </main>
- </div>
- {dialog&&data&&<div className="modal-backdrop" role="presentation" onClick={()=>setDialog(false)}><div className="modal" role="dialog" aria-modal="true" aria-label="إضافة سجل تجريبي" onClick={e=>e.stopPropagation()}><div className="panel-head"><h2>إضافة سجل تجريبي</h2><button className="close" aria-label="إغلاق" onClick={()=>setDialog(false)}>×</button></div><div className="form-fields">{data.headers.map(h=><label key={h}>{h}<input value={newValues[h]??""} onChange={e=>setNewValues(v=>({...v,[h]:e.target.value}))} placeholder={h}/></label>)}</div><div className="modal-actions"><button onClick={()=>setDialog(false)}>إلغاء</button><button className="primary" onClick={addDemo}>إضافة للمعاينة</button></div></div></div>}
  </div>;
 }
 createRoot(document.getElementById("root")!).render(<React.StrictMode><App/></React.StrictMode>);
