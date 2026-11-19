@@ -6,7 +6,6 @@ from . import db
 from .models import AttendanceRecord, Student, School, StudentAccount, GuardianStudent
 from .security import require_membership
 from .notifications import enqueue
-from .models import GuardianStudent, StudentAccount
 
 attendance = Blueprint("attendance", __name__, url_prefix="/api/attendance")
 STATUSES = {"present", "absent", "late", "excused"}
