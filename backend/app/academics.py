@@ -97,3 +97,43 @@ def create_record(kind):
         db.session.rollback()
         return jsonify(error="duplicate_or_invalid_record"), 409
     return jsonify(serialize(obj, required, optional)), 201
+
+@academics.patch("/<kind>/<record_id>")
+@require_membership(*WRITERS)
+def update_record(kind, record_id):
+    if kind not in MODELS:
+        return jsonify(error="unknown_resource"), 404
+    model, required, optional = MODELS[kind]
+    obj = db.session.scalar(select(model).where(
+        model.id == record_id, model.tenant_id == g.tenant_id
+    ))
+    if obj is None:
+        return jsonify(error="record_not_found"), 404
+    if g.membership.school_id and g.membership.school_id != obj.school_id:
+        return jsonify(error="forbidden"), 403
+    data = request.get_json(silent=True)
+    if not isinstance(data, dict) or not data:
+        return jsonify(error="invalid_json"), 400
+    allowed = set(required) | set(optional)
+    if not set(data).issubset(allowed):
+        return jsonify(error="invalid_field"), 400
+    from datetime import date
+    for key, value in data.items():
+        if key in ("starts_on", "ends_on"):
+            try:
+                value = date.fromisoformat(value) if value is not None else None
+            except (ValueError, TypeError):
+                return jsonify(error="invalid_date", field=key), 400
+        elif not isinstance(value, str) or not value.strip() or len(value) > 200:
+            return jsonify(error="invalid_field", field=key), 400
+        else:
+            value = value.strip()
+        if key in LINKS and not valid_link(key, value, obj.school_id):
+            return jsonify(error="invalid_reference", field=key), 400
+        setattr(obj, key, value)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify(error="duplicate_or_invalid_record"), 409
+    return jsonify(serialize(obj, required, optional))
