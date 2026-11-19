@@ -137,7 +137,7 @@ def add_account():
     return jsonify(id=membership.id,email=user.email,role=role,school_id=school_id),201
 
 @portals.post("/guardians/link")
-@require_membership("owner", "principal", "registrar")
+@require_membership("principal", "registrar")
 def link_guardian():
     data = request.get_json(silent=True) or {}
     membership_id = data.get("membership_id")
@@ -173,7 +173,7 @@ def link_guardian():
     return jsonify(ok=True), 201
 
 @portals.get("/school-students")
-@require_membership("owner", "principal", "registrar")
+@require_membership("principal", "registrar")
 def school_students():
     school_id = request.args.get("school_id", "")
     if g.membership.school_id and school_id != g.membership.school_id:
@@ -188,7 +188,7 @@ def school_students():
     return jsonify(items=[{"id": s.id, "full_name": s.full_name, "student_code": s.student_code} for s in students])
 
 @portals.get("/school-teachers")
-@require_membership("owner", "principal", "registrar")
+@require_membership("principal", "registrar")
 def school_teachers():
     school_id = request.args.get("school_id", "")
     if g.membership.school_id and school_id != g.membership.school_id:
