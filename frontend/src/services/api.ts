@@ -55,6 +55,7 @@ export const api = {
   notificationRead: (id:string) => call(`/notifications/${encodeURIComponent(id)}/read`,{method:"POST"}),
   ownerOverview: () => call<{tenant:{id:string;name:string;status:string}|null;schools_count:number;accounts_count:number;subscription_status:string|null;schools:{id:string;name:string}[]}>("/owner/overview"),
   schools: () => call<{ items: School[] }>("/schools"),
+  subscriptionPlans: () => call<{items:{id:string;code:string;name:string;price_minor:number;currency:string}[]}>("/subscription/plans"),
   subscription: () => call<{ subscription: { id: string; status: string; plan_id: string } | null }>("/subscription"),
   addSchool: (name: string) => call<School>("/schools", { method: "POST", body: JSON.stringify({ name }) }),
   list: (kind: AcademicKind, school_id: string) =>
