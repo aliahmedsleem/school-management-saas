@@ -38,6 +38,7 @@ export const api = {
   learningAssignment: (data:{school_id:string;section_id:string;teacher_id:string;subject_id:string}) => call("/learning/assignments",{method:"POST",body:JSON.stringify(data)}),
   learningTimetable: (data:{school_id:string;assignment_id:string;weekday:number;period:number}) => call("/learning/timetable",{method:"POST",body:JSON.stringify(data)}),
   learningGrade: (data:{school_id:string;student_id:string;assignment_id:string;assessment:string;score:number;max_score:number}) => call("/learning/grades",{method:"POST",body:JSON.stringify(data)}),
+  teacherRoster: (assignment_id:string) => call<{items:{id:string;name:string;student_code:string}[]}>(`/learning/teacher-roster?assignment_id=${encodeURIComponent(assignment_id)}`),
   learningMine: () => call<{grades:{student_id:string;subject:string;assessment:string;score:number;max_score:number}[];timetable:{assignment_id:string;subject?:string;weekday:number;period:number}[];students?:{id:string;name:string}[];assignments?:{id:string;section_id:string;subject_id:string}[]}>("/learning/mine"),
   attendanceSchool: (school_id:string,day:string) => call<{items:{id:string;student_id:string;day:string;status:string;note:string}[]}>(`/attendance/school?school_id=${encodeURIComponent(school_id)}&day=${encodeURIComponent(day)}`),
   attendanceSave: (data:{school_id:string;student_id:string;day:string;status:string;note:string}) => call("/attendance/school",{method:"POST",body:JSON.stringify(data)}),
