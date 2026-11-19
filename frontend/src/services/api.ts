@@ -29,6 +29,7 @@ export const api = {
   me: async () => { const result = await call<SessionInfo & { csrf_token: string }>("/auth/me"); csrfToken = result.csrf_token; return result; },
   logout: async () => { try { await call("/auth/logout", { method: "POST" }); } finally { csrfToken = null; } },
   schools: () => call<{ items: School[] }>("/schools"),
+  subscription: () => call<{ subscription: { id: string; status: string; plan_id: string } | null }>("/subscription"),
   addSchool: (name: string) => call<School>("/schools", { method: "POST", body: JSON.stringify({ name }) }),
   list: (kind: AcademicKind, school_id: string) =>
     call<{ items: AcademicRow[] }>(`/academics/${kind}?school_id=${encodeURIComponent(school_id)}`),
