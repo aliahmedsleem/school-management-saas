@@ -39,7 +39,7 @@ export default function RolePortal({page, onRole, onNavigate}: {page:string;onRo
  const [guardianStudents,setGuardianStudents]=useState<{id:string;full_name:string;student_code:string}[]>([]);
  const [busy,setBusy]=useState(false);
  const [needsSelection,setNeedsSelection]=useState(false);
- useEffect(()=>{api.me().then(async s=>{setSession(s);onRole?.(s.role);try {const c=await api.portalContext();setMembers(c.memberships);setSchools(c.schools);}catch{setNeedsSelection(true);}}).catch(async()=>{try{const pending=await api.pending();if(pending.selection_required){setMembers(pending.memberships);setSession({...pending,role:""});setNeedsSelection(true);}}catch{/* unauthenticated */}}).finally(()=>setLoading(false));},[]);
+ useEffect(()=>{api.me().then(async s=>{setSession(s);setForm(v=>({...v,role:s.role==="owner"?"principal":s.role==="principal"?"registrar":"student",school_id:"",record_id:""}));onRole?.(s.role);try {const c=await api.portalContext();setMembers(c.memberships);setSchools(c.schools);}catch{setNeedsSelection(true);}}).catch(async()=>{try{const pending=await api.pending();if(pending.selection_required){setMembers(pending.memberships);setSession({...pending,role:""});setNeedsSelection(true);}}catch{/* unauthenticated */}}).finally(()=>setLoading(false));},[]);
  useEffect(()=>{
   if(!session)return;
   if(session.role==="parent")api.myStudents().then(r=>setChildren(r.items)).catch(()=>{});
@@ -59,12 +59,12 @@ export default function RolePortal({page, onRole, onNavigate}: {page:string;onRo
    setMembers(s.memberships||[]);
    if((s.memberships||[]).length>1) {setNeedsSelection(true);setSession(s);setPassword("");onRole?.("");return;}
    const c=await api.portalContext();
-   setSchools(c.schools);setNeedsSelection(false);setSession(s);onRole?.(s.role);setPassword("");
+   setSchools(c.schools);setNeedsSelection(false);setSession(s);setForm(v=>({...v,role:s.role==="owner"?"principal":s.role==="principal"?"registrar":"student",school_id:"",record_id:""}));onRole?.(s.role);setPassword("");
   }catch(e){setError(e instanceof Error?e.message:"فشل تسجيل الدخول");}finally{setBusy(false);}
  }
  async function select(m:MembershipInfo) {
   setBusy(true);setError("");
-  try {await api.selectMembership(m.id);const s=await api.me();setSession(s);onRole?.(s.role);const c=await api.portalContext();setSchools(c.schools);setMembers(c.memberships);setNeedsSelection(false);}
+  try {await api.selectMembership(m.id);const s=await api.me();setSession(s);setForm(v=>({...v,role:s.role==="owner"?"principal":s.role==="principal"?"registrar":"student",school_id:"",record_id:""}));onRole?.(s.role);const c=await api.portalContext();setSchools(c.schools);setMembers(c.memberships);setNeedsSelection(false);}
   catch(e){setError(e instanceof Error?e.message:"تعذر اختيار المدرسة");}finally{setBusy(false);}
  }
  async function addAccount(e:React.FormEvent) {
