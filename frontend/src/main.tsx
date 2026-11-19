@@ -58,7 +58,7 @@ function App(){
  const [notice,setNotice]=useState("");
  const [rows,setRows]=useState<Record<string,RecordRow[]>>({});
  const [newValues,setNewValues]=useState<Record<string,string>>({});
- const livePages:Record<Role,string[]>={platform:["overview","schools","subscriptions","accounts"],school:["overview","onboarding","students","teachers","classes","accounts"],teacher:["overview","profile"],student:["overview","profile"],parent:["overview"]};
+ const livePages:Record<Role,string[]>={platform:["overview","schools","subscriptions","accounts","attendance"],school:["overview","onboarding","students","teachers","classes","accounts","attendance"],teacher:["overview","profile"],student:["overview","profile","attendance"],parent:["overview","attendance"]};
  const nav=liveMode?navigation[role].filter(item=>livePages[role].includes(item.key)):navigation[role];
  const active=nav.find(x=>x.key===page)??nav[0];
  const data=demo[page];
