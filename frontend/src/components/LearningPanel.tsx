@@ -1,4 +1,4 @@
-import {useEffect,useState} from "react";
+import {useEffect,useState, type ReactNode} from "react";
 import {api} from "../services/api";
 const days=["الأحد","الاثنين","الثلاثاء","الأربعاء","الخميس","الجمعة","السبت"];
 type Catalog={subjects:{id:string;name:string}[];assignments:{id:string;section_id:string;teacher_id:string;subject_id:string}[]};
@@ -28,7 +28,7 @@ export default function LearningPanel({role,schools}:{role:string;schools:{id:st
  async function refresh(){if(!school)return;try{setCatalog(await api.learningCatalog(school));const [a,b,c]=await Promise.all([api.list("sections",school),api.schoolTeachers(school),api.schoolStudents(school)]);setSections(a.items.map(x=>({id:x.id,name:String(x.name||x.id)})));setTeachers(b.items);setStudents(c.items);}catch(e){setMessage(e instanceof Error?e.message:"تعذر جلب البيانات")}}
  useEffect(()=>{if(editor)refresh();else api.learningMine().then(setMine).catch(e=>setMessage(e instanceof Error?e.message:"تعذر جلب البيانات"));},[school,role]);
  async function submit(fn:()=>Promise<unknown>){setBusy(true);setMessage("");try{await fn();setMessage("تم الحفظ بنجاح");await refresh()}catch(e){setMessage(e instanceof Error?e.message:"تعذر الحفظ")}finally{setBusy(false)}}
- const label=(text:string,control:React.ReactNode)=><label>{text}{control}</label>;
+ const label=(text:string,control:ReactNode)=><label>{text}{control}</label>;
  const option=(items:{id:string;name:string}[])=><>{items.map(x=><option key={x.id} value={x.id}>{x.name}</option>)}</>;
  return <section className="live-panel"><h2>المواد والجداول والدرجات</h2>
  {editor?<><div className="attendance-filters">{label("المدرسة",<select value={school} onChange={e=>setSchool(e.target.value)}>{option(schools)}</select>)}</div>
