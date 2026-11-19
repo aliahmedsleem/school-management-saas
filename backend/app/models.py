@@ -59,3 +59,61 @@ class Subscription(db.Model):
     status = db.Column(db.String(24), nullable=False, default="trial")
     starts_at = db.Column(db.DateTime(timezone=True), nullable=True)
     ends_at = db.Column(db.DateTime(timezone=True), nullable=True)
+
+# Academic records are scoped by both tenant and school. Cross-tenant references
+# are validated by API services; composite database constraints are planned next.
+class AcademicYear(db.Model):
+    __tablename__ = "academic_years"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    tenant_id = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
+    school_id = db.Column(db.String(36), db.ForeignKey("schools.id"), nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
+    starts_on = db.Column(db.Date, nullable=True)
+    ends_on = db.Column(db.Date, nullable=True)
+    __table_args__ = (db.UniqueConstraint("school_id", "name", name="uq_year_school_name"),)
+
+class GradeLevel(db.Model):
+    __tablename__ = "grade_levels"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    tenant_id = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
+    school_id = db.Column(db.String(36), db.ForeignKey("schools.id"), nullable=False, index=True)
+    name = db.Column(db.String(100), nullable=False)
+    stage = db.Column(db.String(100), nullable=False, default="middle")
+    __table_args__ = (db.UniqueConstraint("school_id", "name", name="uq_grade_school_name"),)
+
+class ClassSection(db.Model):
+    __tablename__ = "class_sections"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    tenant_id = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
+    school_id = db.Column(db.String(36), db.ForeignKey("schools.id"), nullable=False, index=True)
+    grade_level_id = db.Column(db.String(36), db.ForeignKey("grade_levels.id"), nullable=False)
+    name = db.Column(db.String(100), nullable=False)
+    __table_args__ = (db.UniqueConstraint("grade_level_id", "name", name="uq_section_grade_name"),)
+
+class Student(db.Model):
+    __tablename__ = "students"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    tenant_id = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
+    school_id = db.Column(db.String(36), db.ForeignKey("schools.id"), nullable=False, index=True)
+    full_name = db.Column(db.String(200), nullable=False)
+    student_code = db.Column(db.String(60), nullable=False)
+    __table_args__ = (db.UniqueConstraint("school_id", "student_code", name="uq_student_school_code"),)
+
+class Teacher(db.Model):
+    __tablename__ = "teachers"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    tenant_id = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
+    school_id = db.Column(db.String(36), db.ForeignKey("schools.id"), nullable=False, index=True)
+    full_name = db.Column(db.String(200), nullable=False)
+    employee_code = db.Column(db.String(60), nullable=False)
+    __table_args__ = (db.UniqueConstraint("school_id", "employee_code", name="uq_teacher_school_code"),)
+
+class StudentEnrollment(db.Model):
+    __tablename__ = "student_enrollments"
+    id = db.Column(db.String(36), primary_key=True, default=uid)
+    tenant_id = db.Column(db.String(36), db.ForeignKey("tenants.id"), nullable=False, index=True)
+    school_id = db.Column(db.String(36), db.ForeignKey("schools.id"), nullable=False, index=True)
+    student_id = db.Column(db.String(36), db.ForeignKey("students.id"), nullable=False)
+    academic_year_id = db.Column(db.String(36), db.ForeignKey("academic_years.id"), nullable=False)
+    section_id = db.Column(db.String(36), db.ForeignKey("class_sections.id"), nullable=False)
+    __table_args__ = (db.UniqueConstraint("student_id", "academic_year_id", name="uq_student_year"),)
