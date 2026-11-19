@@ -30,7 +30,7 @@ def create_app(test_config=None):
     from .portals import portals
     from .attendance import attendance
     from .learning import learning
-    from .cli import bootstrap_demo, bootstrap_staging
+    from .cli import bootstrap_demo, bootstrap_staging, create_staging_owner
     app.register_blueprint(api)
     app.register_blueprint(academics)
     app.register_blueprint(portals)
@@ -38,6 +38,7 @@ def create_app(test_config=None):
     app.register_blueprint(learning)
     app.cli.add_command(bootstrap_demo)
     app.cli.add_command(bootstrap_staging)
+    app.cli.add_command(create_staging_owner)
 
     @app.before_request
     def csrf_protection():
