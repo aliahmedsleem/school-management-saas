@@ -40,6 +40,7 @@ export default function AcademicWorkspace() {
     setSchools(result.items);
     setSchoolId(current => result.items.some(s => s.id === current) ? current : (result.items[0]?.id || ""));
   }
+  useEffect(() => { api.me().then(setSession).catch(() => {}); }, []);
   useEffect(() => { if (session) loadSchools().catch(e => setError(message(e))); }, [session]);
   useEffect(() => {
     if (!session || !schoolId) { setRows([]); return; }
