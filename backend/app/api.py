@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request, session, g
-from sqlalchemy import select
+from sqlalchemy import select, func
 from werkzeug.security import check_password_hash
 from . import db
 from .models import User, Membership, School, Tenant, Subscription
@@ -87,3 +87,20 @@ def pending_membership():
                    memberships=[{"id":m.id,"role":m.role,"school_id":m.school_id} for m in memberships],
                    selection_required=len(memberships)>1 and not session.get("membership_id"),
                    csrf_token=session.get("csrf_token"))
+
+
+@api.get("/owner/overview")
+@require_membership("owner")
+def owner_overview():
+    """Tenant owner overview; never expose cross-tenant platform statistics."""
+    if g.membership.school_id is not None:
+        return jsonify(error="forbidden"), 403
+    tenant = db.session.get(Tenant, g.tenant_id)
+    schools_count = db.session.scalar(select(func.count(School.id)).where(School.tenant_id == g.tenant_id)) or 0
+    accounts_count = db.session.scalar(select(func.count(func.distinct(Membership.user_id))).where(Membership.tenant_id == g.tenant_id)) or 0
+    subscription = db.session.scalar(select(Subscription).where(Subscription.tenant_id == g.tenant_id).order_by(Subscription.starts_at.desc()))
+    schools = db.session.scalars(select(School).where(School.tenant_id == g.tenant_id).order_by(School.name).limit(8)).all()
+    return jsonify(tenant={"id": tenant.id, "name": tenant.name, "status": tenant.status} if tenant else None,
+                   schools_count=schools_count, accounts_count=accounts_count,
+                   subscription_status=subscription.status if subscription else None,
+                   schools=[{"id": s.id, "name": s.name} for s in schools])
