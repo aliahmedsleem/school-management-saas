@@ -94,6 +94,8 @@ def add_account():
     record_id = data.get("record_id")
     if role not in ROLES or role == "owner" or not isinstance(password,str) or len(password)<12 or len(password)>128 or "@" not in email:
         return jsonify(error="invalid_account"), 400
+    if g.membership.role == "principal" and role == "principal":
+        return jsonify(error="forbidden"), 403
     if role in {"teacher","student","parent","registrar","principal"} and not school_id:
         return jsonify(error="school_required"), 400
     if g.membership.school_id and school_id != g.membership.school_id:
