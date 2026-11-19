@@ -121,15 +121,13 @@ def test_notification_mark_read_cannot_access_other_user(app):
 def test_school_notice_reaches_tenant_wide_member_only(app):
     with app.app_context():
         tenant=Tenant(name="Group")
-        school=School(tenant_id=None,name="Campus")
-        another=School(tenant_id=None,name="Other campus")
+        school=School(tenant_id=tenant.id,name="Campus")
+        another=School(tenant_id=tenant.id,name="Other campus")
         global_member=User(email="group-owner@example.test",password_hash="test")
         school_member=User(email="campus-parent@example.test",password_hash="test")
         other_member=User(email="other-parent@example.test",password_hash="test")
         db.session.add_all([tenant,global_member,school_member,other_member])
         db.session.flush()
-        school.tenant_id=tenant.id
-        another.tenant_id=tenant.id
         db.session.add_all([school,another])
         db.session.flush()
         db.session.add_all([
