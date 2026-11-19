@@ -8,7 +8,7 @@ import "./components/academic.css";
 type Role="owner"|"principal"|"registrar"|"teacher"|"student"|"parent"|null;
 type Item={key:string;label:string;icon:string};
 const menus:Record<Exclude<Role,null>,Item[]>={
- owner:[{key:"overview",label:"لوحة مدير النظام",icon:"◫"},{key:"schools",label:"المدارس",icon:"▣"},{key:"accounts",label:"توزيع حسابات المدارس",icon:"♧"},{key:"subscriptions",label:"الاشتراكات",icon:"▤"},{key:"learning",label:"المواد والجداول",icon:"▦"},{key:"attendance",label:"الحضور",icon:"◉"}],
+ owner:[{key:"overview",label:"لوحة مدير النظام",icon:"◫"},{key:"schools",label:"المدارس",icon:"▣"},{key:"accounts",label:"توزيع حسابات المدارس",icon:"♧"},{key:"subscriptions",label:"الاشتراكات",icon:"▤"}],
  principal:[{key:"overview",label:"لوحة إدارة المدرسة",icon:"◫"},{key:"accounts",label:"الموظفون والحسابات",icon:"♧"},{key:"students",label:"الطلبة",icon:"♙"},{key:"teachers",label:"المدرسون",icon:"♧"},{key:"classes",label:"الصفوف والشعب",icon:"▦"},{key:"onboarding",label:"العام الدراسي",icon:"▣"},{key:"learning",label:"المواد والدرجات",icon:"▤"},{key:"attendance",label:"الحضور",icon:"◉"}],
  registrar:[{key:"overview",label:"لوحة المعاون",icon:"◫"},{key:"students",label:"تسجيل الطلبة",icon:"♙"},{key:"classes",label:"الصفوف والشعب",icon:"▦"},{key:"onboarding",label:"توزيع الطلبة",icon:"▣"},{key:"accounts",label:"حسابات الطلبة والأهالي",icon:"♧"},{key:"attendance",label:"الحضور",icon:"◉"},{key:"learning",label:"المواد الدراسية",icon:"▤"}],
  teacher:[{key:"overview",label:"لوحة المعلم",icon:"◫"},{key:"learning",label:"موادي وجدولي والدرجات",icon:"▦"},{key:"homework",label:"الواجبات الدراسية",icon:"▤"},{key:"profile",label:"ملفي الوظيفي",icon:"♙"}],
