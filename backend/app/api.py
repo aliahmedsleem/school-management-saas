@@ -28,7 +28,7 @@ def login():
     session["user_id"] = user.id
     session["tenant_id"] = tenant_id
     session["csrf_token"] = __import__("secrets").token_urlsafe(32)
-    return jsonify(user={"id": user.id, "email": user.email}, role=membership.role, csrf_token=session["csrf_token"])
+    return jsonify(user={"id": user.id, "email": user.email}, role=membership.role, tenant_id=tenant_id, csrf_token=session["csrf_token"])
 
 @api.post("/auth/logout")
 def logout():
@@ -54,7 +54,9 @@ def create_school():
     name = str(data.get("name", "")).strip()
     if not 1 <= len(name) <= 200:
         return jsonify(error="invalid_school_name"), 400
-    if g.membership.school_id:\n        return jsonify(error="forbidden"), 403\n    school = School(tenant_id=g.tenant_id, name=name, country_code="IQ", timezone="Asia/Baghdad")
+    if g.membership.school_id:
+        return jsonify(error="forbidden"), 403
+    school = School(tenant_id=g.tenant_id, name=name, country_code="IQ", timezone="Asia/Baghdad")
     db.session.add(school)
     db.session.commit()
     return jsonify(id=school.id, name=school.name), 201
