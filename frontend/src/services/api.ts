@@ -32,6 +32,8 @@ export const api = {
   logout: async () => { try { await call("/auth/logout", { method: "POST" }); } finally { csrfToken = null; } },
   portalContext: () => call<{role:string; school_id:string|null; memberships:MembershipInfo[]; schools:{id:string;name:string}[]}>("/portals/context"),
   selectMembership: (membership_id:string) => call<{role:string;school_id:string|null}>("/portals/select-membership", {method:"POST",body:JSON.stringify({membership_id})}),
+  schoolQr: () => call<{token:string;school_id:string;school_name:string;expires_in_seconds:number}>("/portals/school-qr"),
+  resolveSchoolQr: (token:string) => call<{school_id:string;school_name:string;tenant_id:string;verification_required:boolean}>(`/portals/school-qr/resolve?token=${encodeURIComponent(token)}`),
   myStudents: () => call<{items:{id:string;full_name:string;student_code:string}[]}>("/portals/my-students"),
   myProfile: () => call<{id:string;name:string;code:string;school_id:string}>("/portals/my-profile"),
   learningCatalog: (school_id:string) => call<{subjects:{id:string;name:string}[];assignments:{id:string;section_id:string;teacher_id:string;subject_id:string}[]}>(`/learning/catalog?school_id=${encodeURIComponent(school_id)}`),
