@@ -22,7 +22,6 @@ function message(e: unknown) { return errors[e instanceof Error ? e.message : ""
 
 export default function AcademicWorkspace({ page, authenticatedSession }: { page: string; authenticatedSession?: SessionInfo }) {
   const [session, setSession] = useState<SessionInfo | null>(authenticatedSession || null);
-  const canWriteKind = session?.role !== "registrar" || ["students","enrollments"].includes(effectiveKind);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [tenant, setTenant] = useState("");
@@ -40,6 +39,7 @@ export default function AcademicWorkspace({ page, authenticatedSession }: { page
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState("");
   const effectiveKind = ["students","classes","teachers","onboarding"].includes(page) ? kind : (activeKind || kind);
+  const canWriteKind = session?.role !== "registrar" || ["students","enrollments"].includes(effectiveKind);
   const selected = kinds.find(k => k.key === effectiveKind)!;
 
   async function loadSchools() {
