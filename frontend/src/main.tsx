@@ -13,7 +13,7 @@ const menus:Record<Exclude<Role,null>,Item[]>={
  registrar:[{key:"overview",label:"لوحة المعاون",icon:"◫"},{key:"students",label:"تسجيل الطلبة",icon:"♙"},{key:"classes",label:"الصفوف والشعب",icon:"▦"},{key:"onboarding",label:"توزيع الطلبة",icon:"▣"},{key:"accounts",label:"حسابات الطلبة والأهالي",icon:"♧"},{key:"attendance",label:"الحضور",icon:"◉"},{key:"learning",label:"المواد الدراسية",icon:"▤"}],
  teacher:[{key:"overview",label:"لوحة المعلم",icon:"◫"},{key:"learning",label:"موادي وجدولي والدرجات",icon:"▦"},{key:"homework",label:"الواجبات الدراسية",icon:"▤"},{key:"profile",label:"ملفي الوظيفي",icon:"♙"}],
  student:[{key:"overview",label:"بوابة الطالب وولي الأمر",icon:"◫"},{key:"learning",label:"الدرجات والجدول",icon:"▦"},{key:"attendance",label:"الحضور والغياب",icon:"◉"},{key:"homework",label:"الواجبات",icon:"▤"}],
- parent:[{key:"overview",label:"بوابة الطالب وولي الأمر",icon:"◫"},{key:"learning",label:"الدرجات والجدول",icon:"▦"},{key:"attendance",label:"الحضور والغياب",icon:"◉"}]
+ parent:[{key:"overview",label:"بوابة الطالب وولي الأمر",icon:"◫"},{key:"learning",label:"الدرجات والجدول",icon:"▦"},{key:"attendance",label:"الحضور والغياب",icon:"◉"},{key:"homework",label:"واجبات الأبناء",icon:"▤"}]
 };
 const titles:Record<Exclude<Role,null>,string>={owner:"إدارة النظام",principal:"إدارة المدرسة",registrar:"المعاون / شؤون الطلبة",teacher:"المعلم",student:"الطالب وولي الأمر",parent:"الطالب وولي الأمر"};
 function App(){
