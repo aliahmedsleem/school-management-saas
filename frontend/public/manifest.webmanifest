@@ -1,0 +1,21 @@
+{
+  "id": "/",
+  "name": "SchoolCloud | إدارة المدارس",
+  "short_name": "SchoolCloud",
+  "description": "منصة إدارة مدرسية عربية",
+  "lang": "ar",
+  "dir": "rtl",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "background_color": "#f4f7fc",
+  "theme_color": "#142844",
+  "icons": [
+    {
+      "src": "/icons/icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
+      "purpose": "any maskable"
+    }
+  ]
+}
