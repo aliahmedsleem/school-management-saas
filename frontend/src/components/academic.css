@@ -15,3 +15,21 @@
 .role-banner span{display:block;font-size:12px;color:#c1cfe0;margin-top:6px;overflow-wrap:anywhere}
 .role-banner button{background:#fff;color:#142844;border:0;border-radius:9px;padding:9px 13px;white-space:nowrap}
 @media(max-width:600px){.role-login{padding:18px}.role-login-head{align-items:flex-start}.role-login-head h2{font-size:19px}.role-login-logo{width:48px;height:48px;font-size:26px}.role-login .live-form{grid-template-columns:1fr}.role-login .live-form label{grid-column:1/-1}.role-banner{padding:13px}}
+
+/* Unified family portal and compact role-specific dashboards */
+.family-portal{display:grid;gap:18px}
+.family-head{display:flex;justify-content:space-between;align-items:center;gap:16px;flex-wrap:wrap}
+.family-head h2{margin:0 0 6px}
+.family-head p{margin:0;color:var(--muted,#687588)}
+.family-role{border:1px solid #d4dce7;border-radius:999px;padding:7px 13px;font-size:.85rem}
+.family-children{display:flex;align-items:center;gap:18px;flex-wrap:wrap;padding:14px;border:1px solid #e3e9f0;border-radius:14px}
+.family-children label{min-width:min(100%,290px);display:grid;gap:7px}
+.family-children select{width:100%;padding:10px;border-radius:9px}
+.family-stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+.family-stats>div{display:grid;gap:8px;padding:16px;border:1px solid #e1e8ef;border-radius:14px}
+.family-stats strong{font-size:1.7rem}
+.family-stats span{font-size:.85rem;color:#637083}
+.family-portal .table-wrap{overflow-x:auto}
+.family-portal table{width:100%;min-width:480px}
+@media(max-width:800px){.family-stats{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:420px){.family-stats{grid-template-columns:1fr 1fr}.family-stats>div{padding:10px}.family-head{align-items:flex-start}}
