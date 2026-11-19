@@ -7,6 +7,7 @@ import HomeworkPanel from "./HomeworkPanel";
 import NotificationInbox from "./NotificationInbox";
 import NotificationVoiceListener from "./NotificationVoiceListener";
 import OwnerDashboard from "./OwnerDashboard";
+import SubscriptionPanel from "./SubscriptionPanel";
 import { api, type SessionInfo, type MembershipInfo } from "../services/api";
 import "./academic.css";
 
@@ -94,6 +95,7 @@ export default function RolePortal({page, onRole, onNavigate}: {page:string;onRo
 
   {!permitted?<section className="live-panel"><h2>غير مصرح</h2><p>هذه الصفحة غير متاحة لدورك الحالي. اختر صفحة مسموحة من القائمة.</p></section>:
   role==="owner"&&page==="overview"?<OwnerDashboard onNavigate={onNavigate}/>:
+  page==="subscriptions"&&["owner","principal"].includes(role)?<SubscriptionPanel/>:
   page==="notifications"?<NotificationInbox/>:
   page==="homework"?<HomeworkPanel role={role}/>:
   ["student","parent"].includes(role)?<FamilyPortal role={role as "student"|"parent"} page={page}/>:
