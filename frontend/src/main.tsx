@@ -58,7 +58,8 @@ function App(){
  const [notice,setNotice]=useState("");
  const [rows,setRows]=useState<Record<string,RecordRow[]>>({});
  const [newValues,setNewValues]=useState<Record<string,string>>({});
- const nav=navigation[role];
+ const livePages:Record<Role,string[]>={platform:["overview","schools","subscriptions","accounts"],school:["overview","onboarding","students","teachers","classes","accounts"],teacher:["overview","profile"],student:["overview","profile"],parent:["overview"]};
+ const nav=liveMode?navigation[role].filter(item=>livePages[role].includes(item.key)):navigation[role];
  const active=nav.find(x=>x.key===page)??nav[0];
  const data=demo[page];
  const displayed=useMemo(()=> (rows[page]??data?.rows??[]).filter(r=>Object.values(r).some(v=>String(v).toLowerCase().includes(query.toLowerCase()))),[rows,page,data,query]);
