@@ -27,9 +27,11 @@ def create_app(test_config=None):
     from . import models
     from .api import api
     from .academics import academics
+    from .portals import portals
     from .cli import bootstrap_demo
     app.register_blueprint(api)
     app.register_blueprint(academics)
+    app.register_blueprint(portals)
     app.cli.add_command(bootstrap_demo)
 
     @app.before_request
