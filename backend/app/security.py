@@ -30,13 +30,12 @@ def require_membership(*roles):
             tenant_wide = next((m for m in eligible if m.school_id is None), None)
             if selected:
                 membership = selected
-            elif tenant_wide:
-                membership = tenant_wide
+            elif selected_id:
+                return jsonify(error="forbidden"), 403
+            elif len(memberships) != 1:
+                # Never infer a privileged role from an unrelated membership.
+                return jsonify(error="membership_selection_required"), 403
             else:
-                # No active school-selection mechanism exists yet: fail closed.
-                school_ids = {m.school_id for m in eligible}
-                if len(eligible) != 1:
-                    return jsonify(error="school_selection_required"), 403
                 membership = eligible[0]
             g.tenant_id = tenant_id
             g.user_id = user_id
