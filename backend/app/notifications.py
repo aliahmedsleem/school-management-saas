@@ -1,6 +1,6 @@
 from datetime import datetime, timezone
 from flask import Blueprint, jsonify, g
-from sqlalchemy import select, func
+from sqlalchemy import select, func, or_
 from . import db
 from .models import User, Membership, School
 from .notification_models import Notification
@@ -21,7 +21,7 @@ def enqueue(tenant_id, recipient_ids, kind, title, body, school_id=None, actor_i
         raise ValueError("school_outside_tenant")
     valid=set(db.session.scalars(select(User.id).join(Membership, Membership.user_id==User.id).where(
         User.id.in_(ids), User.is_active.is_(True), Membership.tenant_id==tenant_id,
-        *([Membership.school_id==school_id] if school_id else [])
+        *([or_(Membership.school_id==school_id, Membership.school_id.is_(None))] if school_id else [])
     )).all())
     for user_id in valid:
         db.session.add(Notification(tenant_id=tenant_id,school_id=school_id,recipient_id=user_id,
