@@ -43,7 +43,7 @@ def me():
 @api.get("/schools")
 @require_membership("owner", "principal", "registrar")
 def list_schools():
-    schools = db.session.scalars(select(School).where(School.tenant_id == g.tenant_id).order_by(School.name)).all()
+    schools = db.session.scalars(select(School).where(School.tenant_id == g.tenant_id, *([School.id == g.membership.school_id] if g.membership.school_id else [])).order_by(School.name)).all()
     return jsonify(items=[{"id": s.id, "name": s.name, "country_code": s.country_code, "timezone": s.timezone} for s in schools])
 
 @api.post("/schools")
@@ -53,7 +53,7 @@ def create_school():
     name = str(data.get("name", "")).strip()
     if not 1 <= len(name) <= 200:
         return jsonify(error="invalid_school_name"), 400
-    school = School(tenant_id=g.tenant_id, name=name, country_code="IQ", timezone="Asia/Baghdad")
+    if g.membership.school_id:\n        return jsonify(error="forbidden"), 403\n    school = School(tenant_id=g.tenant_id, name=name, country_code="IQ", timezone="Asia/Baghdad")
     db.session.add(school)
     db.session.commit()
     return jsonify(id=school.id, name=school.name), 201
