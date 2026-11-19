@@ -44,3 +44,19 @@ def test_account_distribution_is_role_scoped():
     catalog = client.get('/api/subscription/plans')
     assert catalog.status_code == 200
     assert catalog.json['items'] == []
+
+    # A QR identifies a school, but cannot enroll or impersonate a student.
+    qr_forbidden = client.get("/api/portals/school-qr")
+    assert qr_forbidden.status_code == 403
+    login("principal")
+    qr_response = client.get("/api/portals/school-qr")
+    assert qr_response.status_code == 200
+    token = qr_response.json["token"]
+    resolved = client.get("/api/portals/school-qr/resolve", query_string={"token": token})
+    assert resolved.status_code == 200
+    assert resolved.json["school_id"] == sid
+    assert resolved.json["school_name"] == "A"
+    assert resolved.json["verification_required"] is True
+    assert "students" not in resolved.json
+    assert client.get("/api/portals/school-qr/resolve", query_string={"token": token + "tampered"}).status_code == 400
+    assert client.get("/api/portals/school-qr/resolve", query_string={"token": "invalid"}).status_code == 400
