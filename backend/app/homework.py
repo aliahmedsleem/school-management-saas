@@ -3,7 +3,7 @@ from flask import Blueprint, request, jsonify, g
 from sqlalchemy import select
 from . import db
 from .security import require_membership
-from .models import TeachingAssignment, TeacherAccount, StudentEnrollment, StudentAccount, GuardianStudent, Student, Subject, Membership
+from .models import TeachingAssignment, TeacherAccount, StudentEnrollment, StudentAccount, GuardianStudent, Student, Subject
 from .notification_models import Homework
 from .notifications import enqueue
 
