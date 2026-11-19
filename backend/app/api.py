@@ -18,11 +18,12 @@ def login():
     user = db.session.scalar(select(User).where(User.email == email))
     if not user or not user.is_active or not check_password_hash(user.password_hash, password):
         return jsonify(error="invalid_credentials"), 401
-    membership = db.session.scalar(select(Membership).where(
+    memberships = db.session.scalars(select(Membership).where(
         Membership.user_id == user.id, Membership.tenant_id == tenant_id
-    ))
-    if not membership:
+    )).all()
+    if not memberships:
         return jsonify(error="invalid_credentials"), 401
+    membership = next((m for m in memberships if m.school_id is None), memberships[0])
     session.clear()
     session["user_id"] = user.id
     session["tenant_id"] = tenant_id
