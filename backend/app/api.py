@@ -2,7 +2,7 @@ from flask import Blueprint, jsonify, request, session, g
 from sqlalchemy import select, func
 from werkzeug.security import check_password_hash
 from . import db
-from .models import User, Membership, School, Tenant, Subscription
+from .models import User, Membership, School, Tenant, Subscription, SubscriptionPlan
 from .security import require_membership
 
 api = Blueprint("api", __name__, url_prefix="/api")
@@ -68,6 +68,15 @@ def create_school():
 def subscription():
     record = db.session.scalar(select(Subscription).where(Subscription.tenant_id == g.tenant_id).order_by(Subscription.starts_at.desc()))
     return jsonify(subscription=None if record is None else {"id": record.id, "status": record.status, "plan_id": record.plan_id})
+
+@api.get("/subscription/plans")
+@require_membership("owner", "principal")
+def subscription_plans():
+    """Read-only price catalog. Tenant owners cannot modify global plans."""
+    plans = db.session.scalars(select(SubscriptionPlan).order_by(SubscriptionPlan.price_minor, SubscriptionPlan.name)).all()
+    return jsonify(items=[{"id": p.id, "code": p.code, "name": p.name,
+                           "price_minor": p.price_minor, "currency": p.currency} for p in plans])
+
 
 @api.get("/auth/pending")
 def pending_membership():
