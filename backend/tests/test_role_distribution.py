@@ -34,4 +34,7 @@ def test_account_distribution_is_role_scoped():
     items=client.get("/api/portals/accounts").json["items"]
     assert all(item["role"] in ("student","parent") for item in items)
     owner_headers=login("owner")
+    assert client.post("/api/portals/accounts",json={"email":"owner-created-teacher@example.test","password":"long-password-123","role":"teacher","school_id":sid},headers=owner_headers).status_code==403
+    assert client.post("/api/portals/accounts",json={"email":"owner-created-registrar@example.test","password":"long-password-123","role":"registrar","school_id":sid},headers=owner_headers).status_code==403
     assert client.post("/api/portals/accounts",json={"email":"school-manager@example.test","password":"long-password-123","role":"principal","school_id":other_id},headers=owner_headers).status_code==201
+\n    owner_items=client.get("/api/portals/accounts").json["items"]\n    assert all(item["role"] == "principal" for item in owner_items)\n
