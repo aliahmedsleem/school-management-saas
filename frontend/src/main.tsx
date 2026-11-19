@@ -21,7 +21,7 @@ function App(){
  const [page,setPage]=useState("overview");
  const [menu,setMenu]=useState(false);
  const [showLogin,setShowLogin]=useState(false);
- const items=role?menus[role]:[];
+ const items=role?[...menus[role],{key:"notifications",label:"الإشعارات",icon:"◉"}]:[];
  function handleRole(next:string){
   const normalized=(["owner","principal","registrar","teacher","student","parent"].includes(next)?next:null) as Role;
   setRole(current=>{if(current!==normalized)setPage("overview");return normalized});
