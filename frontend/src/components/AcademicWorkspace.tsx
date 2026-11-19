@@ -20,8 +20,8 @@ const errors: Record<string, string> = {
 };
 function message(e: unknown) { return errors[e instanceof Error ? e.message : ""] || "تعذّر تنفيذ الطلب. تحقق من الاتصال والبيانات."; }
 
-export default function AcademicWorkspace({ page }: { page: string }) {
-  const [session, setSession] = useState<SessionInfo | null>(null);
+export default function AcademicWorkspace({ page, authenticatedSession }: { page: string; authenticatedSession?: SessionInfo }) {
+  const [session, setSession] = useState<SessionInfo | null>(authenticatedSession || null);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [tenant, setTenant] = useState("");
@@ -46,7 +46,7 @@ export default function AcademicWorkspace({ page }: { page: string }) {
     setSchools(result.items);
     setSchoolId(current => result.items.some(s => s.id === current) ? current : (result.items[0]?.id || ""));
   }
-  useEffect(() => { api.me().then(setSession).catch(() => {}); }, []);
+  useEffect(() => { if (authenticatedSession) setSession(authenticatedSession); else api.me().then(setSession).catch(() => {}); }, [authenticatedSession]);
   useEffect(() => { if (activeKind) { setKind(activeKind); setForm({}); setEditingId(null); } }, [activeKind]);
   useEffect(() => { if (session && (page === "subscriptions" || page === "overview")) api.subscription().then(r => setSubscription(r.subscription)).catch(e => setError(message(e))); }, [session, page]);
   useEffect(() => { if (session) loadSchools().catch(e => setError(message(e))); }, [session]);
