@@ -38,7 +38,7 @@ def valid_link(key, value, school_id):
         model.school_id == school_id)) is not None
 
 @academics.get("/<kind>")
-@require_membership("owner", "principal", "registrar", "teacher")
+@require_membership("owner", "principal", "registrar")
 def list_records(kind):
     if kind not in MODELS:
         return jsonify(error="unknown_resource"), 404
