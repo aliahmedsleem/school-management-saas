@@ -37,7 +37,7 @@ def catalog():
                    assignments=[{"id":a.id,"section_id":a.section_id,"teacher_id":a.teacher_id,"subject_id":a.subject_id} for a in assignments])
 
 @learning.post("/subjects")
-@require_membership("owner","principal","registrar")
+@require_membership("owner","principal")
 def add_subject():
     d=request.get_json(silent=True) or {}
     school_id=d.get("school_id");name=str(d.get("name","")).strip()
