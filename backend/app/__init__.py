@@ -29,11 +29,13 @@ def create_app(test_config=None):
     from .academics import academics
     from .portals import portals
     from .attendance import attendance
+    from .learning import learning
     from .cli import bootstrap_demo, bootstrap_staging
     app.register_blueprint(api)
     app.register_blueprint(academics)
     app.register_blueprint(portals)
     app.register_blueprint(attendance)
+    app.register_blueprint(learning)
     app.cli.add_command(bootstrap_demo)
     app.cli.add_command(bootstrap_staging)
 
