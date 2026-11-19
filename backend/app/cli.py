@@ -58,3 +58,30 @@ def bootstrap_staging(email, school, password):
     db.session.commit()
     click.echo(f"Staging tenant ID: {tenant.id}")
     click.echo(f"Staging school ID: {school_record.id}")
+
+@click.command("create-staging-owner")
+@click.option("--tenant-id", required=True, help="Existing tenant UUID; do not guess")
+@click.option("--email", required=True, help="New owner email")
+@click.option("--password", prompt=True, hide_input=True, confirmation_prompt=True)
+@with_appcontext
+def create_staging_owner(tenant_id, email, password):
+    """Provision an owner for an existing staging tenant without modifying any existing users."""
+    from flask import current_app
+    if current_app.config.get("ENVIRONMENT") != "staging":
+        raise click.ClickException("Only available in staging.")
+    if len(password) < 12 or len(password) > 128:
+        raise click.ClickException("Password must be 12-128 characters.")
+    email = email.strip().lower()
+    if "@" not in email or len(email) > 320:
+        raise click.ClickException("Invalid email.")
+    tenant = db.session.get(Tenant, tenant_id)
+    if tenant is None:
+        raise click.ClickException("Tenant not found. Inspect existing tenants first.")
+    if User.query.filter_by(email=email).first():
+        raise click.ClickException("Email already exists; refusing to modify an existing account.")
+    user = User(email=email, password_hash=generate_password_hash(password))
+    db.session.add(user)
+    db.session.flush()
+    db.session.add(Membership(tenant_id=tenant.id, user_id=user.id, school_id=None, role="owner"))
+    db.session.commit()
+    click.echo("Staging owner created. Tenant ID: " + tenant.id)
