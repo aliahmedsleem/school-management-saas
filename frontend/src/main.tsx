@@ -8,14 +8,14 @@ import "./components/academic.css";
 type Role="owner"|"principal"|"registrar"|"teacher"|"student"|"parent"|null;
 type Item={key:string;label:string;icon:string};
 const menus:Record<Exclude<Role,null>,Item[]>={
- owner:[{key:"overview",label:"لوحة مدير النظام",icon:"◫"},{key:"schools",label:"المدارس",icon:"▣"},{key:"accounts",label:"توزيع حسابات المدارس",icon:"♧"},{key:"subscriptions",label:"الاشتراكات",icon:"▤"}],
+ owner:[{key:"overview",label:"لوحة المؤسسة",icon:"◫"},{key:"schools",label:"المدارس",icon:"▣"},{key:"accounts",label:"مديرو المدارس",icon:"♧"},{key:"subscriptions",label:"الاشتراكات",icon:"▤"}],
  principal:[{key:"overview",label:"لوحة إدارة المدرسة",icon:"◫"},{key:"accounts",label:"الموظفون والحسابات",icon:"♧"},{key:"students",label:"الطلبة",icon:"♙"},{key:"teachers",label:"المدرسون",icon:"♧"},{key:"classes",label:"الصفوف والشعب",icon:"▦"},{key:"onboarding",label:"العام الدراسي",icon:"▣"},{key:"learning",label:"المواد والدرجات",icon:"▤"},{key:"attendance",label:"الحضور",icon:"◉"}],
  registrar:[{key:"overview",label:"لوحة المعاون",icon:"◫"},{key:"students",label:"تسجيل الطلبة",icon:"♙"},{key:"classes",label:"الصفوف والشعب",icon:"▦"},{key:"onboarding",label:"توزيع الطلبة",icon:"▣"},{key:"accounts",label:"حسابات الطلبة والأهالي",icon:"♧"},{key:"attendance",label:"الحضور",icon:"◉"},{key:"learning",label:"المواد الدراسية",icon:"▤"}],
  teacher:[{key:"overview",label:"لوحة المعلم",icon:"◫"},{key:"learning",label:"موادي وجدولي والدرجات",icon:"▦"},{key:"homework",label:"الواجبات الدراسية",icon:"▤"},{key:"profile",label:"ملفي الوظيفي",icon:"♙"}],
  student:[{key:"overview",label:"بوابة الطالب وولي الأمر",icon:"◫"},{key:"learning",label:"الدرجات والجدول",icon:"▦"},{key:"attendance",label:"الحضور والغياب",icon:"◉"},{key:"homework",label:"الواجبات",icon:"▤"}],
  parent:[{key:"overview",label:"بوابة الطالب وولي الأمر",icon:"◫"},{key:"learning",label:"الدرجات والجدول",icon:"▦"},{key:"attendance",label:"الحضور والغياب",icon:"◉"},{key:"homework",label:"واجبات الأبناء",icon:"▤"}]
 };
-const titles:Record<Exclude<Role,null>,string>={owner:"إدارة النظام",principal:"إدارة المدرسة",registrar:"المعاون / شؤون الطلبة",teacher:"المعلم",student:"الطالب وولي الأمر",parent:"الطالب وولي الأمر"};
+const titles:Record<Exclude<Role,null>,string>={owner:"إدارة المؤسسة",principal:"إدارة المدرسة",registrar:"المعاون / شؤون الطلبة",teacher:"المعلم",student:"الطالب وولي الأمر",parent:"الطالب وولي الأمر"};
 function App(){
  const [role,setRole]=useState<Role>(null);
  const [page,setPage]=useState("overview");
@@ -39,8 +39,9 @@ function App(){
    <nav aria-label="القائمة الرئيسية">{items.map(item=><button key={item.key} className={"nav-item "+(page===item.key?"selected":"")} onClick={()=>{setPage(item.key);setMenu(false)}}><span className="nav-icon">{item.icon}</span>{item.label}</button>)}</nav>
    {!role&&<p className="sidebar-hint">تظهر الصفحات المصرح بها فقط بعد تسجيل الدخول.</p>}
   </aside>
+  {menu&&<button className="sidebar-scrim" aria-label="إغلاق القائمة" onClick={()=>setMenu(false)}/>}
   <main className="content">
-   <header className="topbar"><button className="menu-toggle" onClick={()=>setMenu(v=>!v)} aria-label="فتح القائمة">☰</button><div><strong>{role?titles[role]:"SchoolCloud"}</strong><small>واجهة مرتبطة بصلاحيات الحساب الفعلية</small></div><InstallApp/></header>
+   <header className="topbar"><div className="topbar-title"><strong>{role?titles[role]:"SchoolCloud"}</strong><small>{role==="owner"?"إدارة المدارس والاشتراكات والحسابات":"مساحة العمل المدرسية"}</small></div><div className="topbar-actions"><InstallApp/><button className="menu-toggle" onClick={()=>setMenu(v=>!v)} aria-label={menu?"إغلاق القائمة":"فتح القائمة"} aria-expanded={menu}>☰</button></div></header>
    {!role&&<button className="public-back" onClick={()=>setShowLogin(false)}>← العودة إلى الصفحة الرئيسية</button>}
    <RolePortal page={page} onRole={handleRole} onNavigate={setPage}/>
    <footer>SchoolCloud · نسخة اختبار · يمنع استخدام بيانات مدرسية حقيقية قبل اعتماد الحماية والاختبارات</footer>
