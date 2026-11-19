@@ -69,3 +69,27 @@ h1,h2,h3,h4,.brand strong,.public-brand strong{font-family:"IBM Plex Sans Arabic
 .public-copy h1{line-height:1.32;letter-spacing:0}
 .public-copy>p,.public-feature-grid p{line-height:2}
 input,textarea,select{line-height:1.5}
+
+/* Dedicated tenant-owner administration dashboard */
+.owner-dashboard{display:grid;gap:22px;min-width:0}
+.owner-intro{display:flex;justify-content:space-between;align-items:center;gap:18px;padding:25px 28px;border-radius:18px;background:#142844;color:#fff}
+.owner-intro h1{font-size:clamp(20px,2vw,29px);margin:6px 0}
+.owner-intro p{margin:0;color:#c3d0e1;font-size:13px;line-height:1.9}
+.owner-eyebrow{color:#e3bd76;font-size:12px;font-weight:700}
+.owner-status{background:#263e60;border:1px solid #48617f;border-radius:30px;padding:9px 16px;white-space:nowrap;font-size:12px}
+.owner-stats{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:16px}
+.owner-stats article{background:#fff;border:1px solid #e5eaf2;border-radius:16px;padding:22px;display:flex;flex-direction:column;gap:8px;box-shadow:0 7px 25px #14284408}
+.owner-stats article span,.owner-stats article small,.owner-muted{color:#77869a;font-size:12px}
+.owner-stats article strong{font-size:32px;color:#142844;line-height:1.5}
+.owner-stats article strong.owner-stat-text{font-size:20px}
+.owner-columns{display:grid;grid-template-columns:1.2fr 1fr;gap:18px;align-items:start}
+.owner-columns .live-panel{margin:0;min-width:0}
+.owner-school-list{display:grid;gap:8px;margin:18px 0}
+.owner-school-list>div{display:flex;align-items:center;gap:12px;border:1px solid #e9edf3;border-radius:11px;padding:12px}
+.owner-school-icon{background:#f7efdf;color:#97713b;border-radius:9px;padding:8px}
+.owner-link{border:0;background:#142844;color:white;border-radius:10px;padding:10px 16px;margin-top:8px}
+.owner-actions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin-top:18px}
+.owner-actions button{background:#f7f9fc;border:1px solid #e2e8f1;border-radius:11px;padding:15px 10px;color:#1b3556;text-align:right;font-weight:700}
+.owner-actions button:hover{background:#edf2f9}
+@media(max-width:900px){.owner-columns{grid-template-columns:1fr}}
+@media(max-width:650px){.owner-intro{padding:20px;align-items:flex-start;flex-direction:column}.owner-stats{grid-template-columns:1fr}.owner-actions{grid-template-columns:1fr 1fr}}
