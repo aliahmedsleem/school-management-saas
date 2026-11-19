@@ -24,7 +24,8 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
  const [schools,setSchools]=useState<{id:string;name:string}[]>([]);
  const [form,setForm]=useState({email:"",password:"",role:"teacher",school_id:"",record_id:""});
  const [busy,setBusy]=useState(false);
- useEffect(()=>{api.me().then(async s=>{setSession(s);onRole?.(s.role);try {const c=await api.portalContext();setMembers(c.memberships);setSchools(c.schools);}catch{}}).catch(()=>{}).finally(()=>setLoading(false));},[]);
+ const [needsSelection,setNeedsSelection]=useState(false);
+ useEffect(()=>{api.me().then(async s=>{setSession(s);onRole?.(s.role);try {const c=await api.portalContext();setMembers(c.memberships);setSchools(c.schools);}catch{setNeedsSelection(true);}}).catch(()=>{}).finally(()=>setLoading(false));},[]);
  useEffect(()=>{
   if(!session)return;
   if(session.role==="parent")api.myStudents().then(r=>setChildren(r.items)).catch(()=>{});
@@ -36,14 +37,14 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
   try{
    const s=await api.login(email,password,tenant);
    setMembers(s.memberships||[]);
-   if((s.memberships||[]).length>1) {setSession(s);setPassword("");return;}
+   if((s.memberships||[]).length>1) {setNeedsSelection(true);setSession(s);setPassword("");return;}
    const c=await api.portalContext();
-   setSchools(c.schools);setSession(s);onRole?.(s.role);setPassword("");
+   setSchools(c.schools);setNeedsSelection(false);setSession(s);onRole?.(s.role);setPassword("");
   }catch(e){setError(e instanceof Error?e.message:"فشل تسجيل الدخول");}finally{setBusy(false);}
  }
  async function select(m:MembershipInfo) {
   setBusy(true);setError("");
-  try {await api.selectMembership(m.id);const s=await api.me();setSession(s);onRole?.(s.role);const c=await api.portalContext();setSchools(c.schools);}
+  try {await api.selectMembership(m.id);const s=await api.me();setSession(s);onRole?.(s.role);const c=await api.portalContext();setSchools(c.schools);setNeedsSelection(false);}
   catch(e){setError(e instanceof Error?e.message:"تعذر اختيار المدرسة");}finally{setBusy(false);}
  }
  async function addAccount(e:React.FormEvent) {
@@ -63,11 +64,11 @@ export default function RolePortal({page, onRole}: {page:string;onRole?:(role:st
   </form>{error&&<p className="live-error" role="alert">{error}</p>}
   <p>يحدد النظام صلاحياتك تلقائياً بعد تسجيل الدخول. لا يمكن اختيار دور أعلى من الصلاحية الممنوحة لحسابك.</p>
  </section>;
- if(members.length>1&&!members.some(m=>m.role===session.role&&m.school_id===null)&&!schools.length) return <section className="live-panel"><h2>اختر الحساب والمدرسة</h2>{members.map(m=><button style={{margin:6}} disabled={busy} key={m.id} onClick={()=>select(m)}>{names[m.role]||m.role} — {m.school_id||"جميع المدارس"}</button>)}{error&&<p role="alert">{error}</p>}</section>;
+ if(needsSelection && members.length>1) return <section className="live-panel"><h2>اختر الحساب والمدرسة</h2>{members.map(m=><button style={{margin:6}} disabled={busy} key={m.id} onClick={()=>select(m)}>{names[m.role]||m.role} — {m.school_id||"جميع المدارس"}</button>)}{error&&<p role="alert">{error}</p>}</section>;
  const role=session.role;
  const permitted=(allowed[role]||["overview"]).includes(page);
  return <div className="role-portal">
-  <div className="role-banner"><div><strong>{names[role]||role}</strong><span>{session.user.email}</span></div><button onClick={async()=>{try{await api.logout();}finally{setSession(null);setMembers([]);setSchools([]);setProfile(null);setChildren([]);}}}>تسجيل الخروج</button></div>
+  <div className="role-banner"><div><strong>{names[role]||role}</strong><span>{session.user.email}</span></div><button onClick={async()=>{try{await api.logout();}finally{setSession(null);setMembers([]);setSchools([]);setProfile(null);setChildren([]);setNeedsSelection(false);}}}>تسجيل الخروج</button></div>
   {error&&<p className="live-error" role="alert">{error}</p>}
   {!permitted?<section className="live-panel"><h2>غير مصرح</h2><p>هذه الصفحة غير متاحة لدورك الحالي. اختر صفحة مسموحة من القائمة.</p></section>:
   role==="parent"?<section className="live-panel"><h2>أبنائي</h2><p>الطلبة المرتبطون بحساب ولي الأمر فقط</p>{children.length?<div className="table-wrap"><table><thead><tr><th>الطالب</th><th>الرقم المدرسي</th></tr></thead><tbody>{children.map(c=><tr key={c.id}><td>{c.full_name}</td><td>{c.student_code}</td></tr>)}</tbody></table></div>:<p>لا يوجد أبناء مرتبطون بحسابك بعد.</p>}</section>:
