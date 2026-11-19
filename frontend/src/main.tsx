@@ -2,6 +2,7 @@ import React, { useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import "./style.css";
 import AcademicWorkspace from "./components/AcademicWorkspace";
+import InstallApp from "./components/InstallApp";
 
 type Role = "platform" | "school" | "teacher" | "parent" | "student";
 type RecordRow = Record<string, string | number>;
@@ -72,7 +73,7 @@ function App(){
  </aside>
  {menu&&<button className="scrim" aria-label="إغلاق القائمة" onClick={()=>setMenu(false)}/>}
  <div className="workspace">
-  <header className="topbar"><div className="top-start"><button className="hamburger" onClick={()=>setMenu(!menu)} aria-label="القائمة">☰</button><div><small>المنصة / {role==="platform"?"الإدارة المركزية":"مدرسة المستقبل النموذجية"}</small><strong>{active.label}</strong></div></div><div className="top-actions"><button className="mode-toggle" onClick={()=>setLiveMode(v=>!v)}>{liveMode?"العودة للمعاينة":"البيانات الفعلية"}</button><span className="demo-pill">{liveMode?"API":"DEMO"}</span><select aria-label="تبديل نوع المستخدم" value={role} onChange={e=>switchRole(e.target.value as Role)}><option value="platform">مدير المنصة</option><option value="school">إدارة المدرسة</option><option value="teacher">المدرس</option><option value="parent">ولي الأمر</option><option value="student">الطالب</option></select><div className="avatar">ع</div></div></header>
+  <header className="topbar"><div className="top-start"><button className="hamburger" onClick={()=>setMenu(!menu)} aria-label="القائمة">☰</button><div><small>المنصة / {role==="platform"?"الإدارة المركزية":"مدرسة المستقبل النموذجية"}</small><strong>{active.label}</strong></div></div><div className="top-actions"><InstallApp/><button className="mode-toggle" onClick={()=>setLiveMode(v=>!v)}>{liveMode?"العودة للمعاينة":"البيانات الفعلية"}</button><span className="demo-pill">{liveMode?"API":"DEMO"}</span><select aria-label="تبديل نوع المستخدم" value={role} onChange={e=>switchRole(e.target.value as Role)}><option value="platform">مدير المنصة</option><option value="school">إدارة المدرسة</option><option value="teacher">المدرس</option><option value="parent">ولي الأمر</option><option value="student">الطالب</option></select><div className="avatar">ع</div></div></header>
   <main className="content">
    <div className="welcome"><div><div className="eyebrow">العام الدراسي 2026–2027 · العراق</div><h1>{page==="overview"?"مرحباً بك في لوحة التحكم":active.label}</h1><p>{role==="platform"?"إدارة المؤسسات التعليمية والاشتراكات من مكان واحد":role==="parent"?"تابع أبنائك وجداولهم ونتائجهم بكل سهولة":"نظام موحد لإدارة العملية التعليمية والموارد الدراسية"}</p></div><div className="welcome-badge">✦ <span>نسخة تطوير غير جاهزة للإنتاج</span></div></div>
    {liveMode ? <AcademicWorkspace page={page}/> : <><div className="alert">هذه واجهة عرض ببيانات تجريبية فقط. التعديلات هنا مؤقتة داخل الصفحة ولا تُحفظ في الخادم.</div>
