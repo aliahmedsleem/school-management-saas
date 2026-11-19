@@ -40,3 +40,7 @@ def test_account_distribution_is_role_scoped():
 
     owner_items=client.get("/api/portals/accounts").json["items"]
     assert all(item["role"] == "principal" for item in owner_items)
+
+    catalog = client.get('/api/subscription/plans')
+    assert catalog.status_code == 200
+    assert catalog.json['items'] == []
