@@ -18,10 +18,11 @@ export default function InstallApp() {
   return <div className="install-wrap">
     <button type="button" className="install-button" onClick={async () => {
       if (!prompt) { setHelp(value => !value); return; }
-      await prompt.prompt();
-      const result = await prompt.userChoice;
-      if (result.outcome === "accepted") setPrompt(null);
-    }}>⬇ تثبيت التطبيق</button>
-    {help && <div className="install-help" role="status"><button type="button" aria-label="إغلاق" onClick={() => setHelp(false)}>×</button><strong>تثبيت SchoolCloud</strong><p>على Android افتح القائمة ⋮ ثم «إضافة إلى الشاشة الرئيسية» أو «تثبيت التطبيق». على iPhone استخدم مشاركة ← إضافة إلى الشاشة الرئيسية.</p><p>التثبيت عبر عنوان IP عادي غير مدعوم في معظم المتصفحات. استخدم HTTPS باسم نطاق موثوق، أو localhost للتجربة.</p></div>}
+      try {
+        await prompt.prompt();
+        await prompt.userChoice;
+      } finally { setPrompt(null); }
+    }} aria-expanded={help}>⬇ تثبيت التطبيق</button>
+    {help && <div className="install-help" role="status"><button type="button" aria-label="إغلاق" onClick={() => setHelp(false)}>×</button><strong>تثبيت SchoolCloud</strong><p>على Android افتح القائمة ⋮ ثم «إضافة إلى الشاشة الرئيسية» أو «تثبيت التطبيق». على iPhone استخدم مشاركة ← إضافة إلى الشاشة الرئيسية.</p><p>التثبيت والتخزين دون اتصال والإشعارات الفورية تحتاج HTTPS موثوقاً، أو localhost للتطوير.</p></div>}
   </div>;
 }
