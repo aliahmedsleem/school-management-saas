@@ -11,7 +11,7 @@ MODELS = {
     "years": (AcademicYear, ("name",), ("starts_on", "ends_on")),
     "grades": (GradeLevel, ("name",), ("stage",)),
     "sections": (ClassSection, ("name", "grade_level_id"), ()),
-    "students": (Student, ("full_name", "student_code"), ()),
+    "students": (Student, ("full_name", "student_code"), ("address", "guardian_name", "guardian_phone", "guardian_email")),
     "teachers": (Teacher, ("full_name", "employee_code"), ()),
     "enrollments": (StudentEnrollment, ("student_id", "academic_year_id", "section_id"), ()),
 }
@@ -23,8 +23,9 @@ LINKS = {
 }
 
 def serialize(obj, required, optional):
+    keys = ("id", "school_id", *required, *optional, *(('qr_token',) if isinstance(obj, Student) else ()))
     return {key: (value.isoformat() if hasattr(value, "isoformat") else value)
-            for key in ("id", "school_id", *required, *optional)
+            for key in keys
             if (value := getattr(obj, key, None)) is not None}
 
 def scope_school(school_id):
@@ -49,9 +50,11 @@ def list_records(kind):
     if g.membership.school_id and g.membership.school_id != school_id:
         return jsonify(error="forbidden"), 403
     model, required, optional = MODELS[kind]
+    order_field = Student.full_name if kind == "students" else model.id
+    limit = 500 if kind == "students" else 100
     records = db.session.scalars(select(model).where(
         model.tenant_id == g.tenant_id, model.school_id == school_id
-    ).order_by(model.id).limit(100)).all()
+    ).order_by(order_field).limit(limit)).all()
     return jsonify(items=[serialize(r, required, optional) for r in records])
 
 @academics.post("/<kind>")
@@ -84,10 +87,12 @@ def create_record(kind):
                     values[key] = date.fromisoformat(data[key])
                 except (ValueError, TypeError):
                     return jsonify(error="invalid_date", field=key), 400
-            elif isinstance(data[key], str) and len(data[key]) <= 100:
+            elif isinstance(data[key], str) and len(data[key]) <= (320 if key == "guardian_email" else 300 if key == "address" else 200):
                 values[key] = data[key].strip()
             else:
                 return jsonify(error="invalid_field", field=key), 400
+    if values.get("guardian_email") and "@" not in values["guardian_email"]:
+        return jsonify(error="invalid_field", field="guardian_email"), 400
     for key, value in values.items():
         if key in LINKS and not valid_link(key, value, school_id):
             return jsonify(error="invalid_reference", field=key), 400
@@ -128,10 +133,12 @@ def update_record(kind, record_id):
                 value = date.fromisoformat(value) if value is not None else None
             except (ValueError, TypeError):
                 return jsonify(error="invalid_date", field=key), 400
-        elif not isinstance(value, str) or not value.strip() or len(value) > 200:
+        elif not isinstance(value, str) or (key in required and not value.strip()) or len(value) > (320 if key == "guardian_email" else 300 if key == "address" else 200):
             return jsonify(error="invalid_field", field=key), 400
         else:
             value = value.strip()
+        if key == "guardian_email" and value and ("@" not in value or len(value) > 320):
+            return jsonify(error="invalid_field", field=key), 400
         if key in LINKS and not valid_link(key, value, obj.school_id):
             return jsonify(error="invalid_reference", field=key), 400
         setattr(obj, key, value)
@@ -141,3 +148,34 @@ def update_record(kind, record_id):
         db.session.rollback()
         return jsonify(error="duplicate_or_invalid_record"), 409
     return jsonify(serialize(obj, required, optional))
+
+@academics.delete("/<kind>/<record_id>")
+@require_membership(*WRITERS)
+def delete_record(kind, record_id):
+    if kind not in MODELS:
+        return jsonify(error="unknown_resource"), 404
+    if g.membership.role == "registrar" and kind not in {"students", "enrollments"}:
+        return jsonify(error="forbidden"), 403
+    model, _, _ = MODELS[kind]
+    obj = db.session.scalar(select(model).where(model.id == record_id, model.tenant_id == g.tenant_id))
+    if obj is None:
+        return jsonify(error="record_not_found"), 404
+    if g.membership.school_id and g.membership.school_id != obj.school_id:
+        return jsonify(error="forbidden"), 403
+    # Refuse deletion when the record participates in other school data. This
+    # prevents accidental loss of attendance, grades, accounts or enrollments.
+    if kind == "students":
+        from .models import StudentEnrollment, StudentAccount, GuardianStudent, AttendanceRecord, GradeRecord
+        linked = any(db.session.scalar(select(m.id).where(c == obj.id).limit(1)) for m, c in (
+            (StudentEnrollment, StudentEnrollment.student_id), (StudentAccount, StudentAccount.student_id),
+            (GuardianStudent, GuardianStudent.student_id), (AttendanceRecord, AttendanceRecord.student_id),
+            (GradeRecord, GradeRecord.student_id)))
+        if linked:
+            return jsonify(error="record_in_use"), 409
+    db.session.delete(obj)
+    try:
+        db.session.commit()
+    except IntegrityError:
+        db.session.rollback()
+        return jsonify(error="record_in_use"), 409
+    return jsonify(ok=True)

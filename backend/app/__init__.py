@@ -36,7 +36,7 @@ def create_app(test_config=None):
     from .learning import learning
     from .notifications import notifications
     from .homework import homework
-    from .cli import bootstrap_demo, bootstrap_staging, create_staging_owner
+    from .cli import bootstrap_demo, bootstrap_staging, create_staging_owner, migrate_student_profiles
     from .communication_cli import init_communication_tables, deliver_push_notifications
     app.register_blueprint(api)
     app.register_blueprint(academics)
@@ -48,6 +48,7 @@ def create_app(test_config=None):
     app.cli.add_command(bootstrap_demo)
     app.cli.add_command(bootstrap_staging)
     app.cli.add_command(create_staging_owner)
+    app.cli.add_command(migrate_student_profiles)
     app.cli.add_command(init_communication_tables)
     app.cli.add_command(deliver_push_notifications)
 

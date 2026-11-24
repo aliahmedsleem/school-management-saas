@@ -49,8 +49,6 @@ export const api = {
   },
   portalContext: () => call<{role:string; school_id:string|null; memberships:MembershipInfo[]; schools:{id:string;name:string}[]}>("/portals/context"),
   selectMembership: (membership_id:string) => call<{role:string;school_id:string|null}>("/portals/select-membership", {method:"POST",body:JSON.stringify({membership_id})}),
-  schoolQr: () => call<{token:string;school_id:string;school_name:string;expires_in_seconds:number}>("/portals/school-qr"),
-  resolveSchoolQr: (token:string) => call<{school_id:string;school_name:string;tenant_id:string;verification_required:boolean}>(`/portals/school-qr/resolve?token=${encodeURIComponent(token)}`),
   myStudents: () => call<{items:{id:string;full_name:string;student_code:string}[]}>("/portals/my-students"),
   myProfile: () => call<{id:string;name:string;code:string;school_id:string}>("/portals/my-profile"),
   learningCatalog: (school_id:string) => call<{subjects:{id:string;name:string}[];assignments:{id:string;section_id:string;teacher_id:string;subject_id:string}[]}>(`/learning/catalog?school_id=${encodeURIComponent(school_id)}`),
@@ -65,7 +63,6 @@ export const api = {
   attendanceMine: (student_id?:string) => call<{items:{id:string;student_id:string;day:string;status:string;note:string}[]}>(`/attendance/mine${student_id?`?student_id=${encodeURIComponent(student_id)}`:""}`),
   schoolStudents: (school_id:string) => call<{items:{id:string;full_name:string;student_code:string}[]}>(`/portals/school-students?school_id=${encodeURIComponent(school_id)}`),
   schoolTeachers: (school_id:string) => call<{items:{id:string;full_name:string;employee_code:string}[]}>(`/portals/school-teachers?school_id=${encodeURIComponent(school_id)}`),
-  linkGuardian: (membership_id:string,student_id:string) => call("/portals/guardians/link",{method:"POST",body:JSON.stringify({membership_id,student_id})}),
   accounts: () => call<{items:{id:string;email:string;role:string;school_id:string|null}[]}>("/portals/accounts"),
   createAccount: (data:{email:string;password:string;role:string;school_id:string;record_id?:string}) => call("/portals/accounts",{method:"POST",body:JSON.stringify(data)}),
   homeworkList: () => call<{items:{id:string;assignment_id:string;school_id:string;title:string;description:string;due_at:string;created_at:string}[]}>("/homework"),
@@ -86,6 +83,8 @@ export const api = {
     call<{ items: AcademicRow[] }>(`/academics/${kind}?school_id=${encodeURIComponent(school_id)}`),
   update: (kind: AcademicKind, id: string, values: AcademicRow) =>
     call<AcademicRow>(`/academics/${kind}/${encodeURIComponent(id)}`, { method: "PATCH", body: JSON.stringify(values) }),
+  delete: (kind: AcademicKind, id: string) =>
+    call<{ok:boolean}>(`/academics/${kind}/${encodeURIComponent(id)}`, { method: "DELETE" }),
   create: (kind: AcademicKind, values: AcademicRow) =>
     call<AcademicRow>(`/academics/${kind}`, { method: "POST", body: JSON.stringify(values) }),
 };

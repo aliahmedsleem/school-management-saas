@@ -1,4 +1,5 @@
 from datetime import datetime, timezone
+import secrets
 from uuid import uuid4
 from . import db
 
@@ -97,6 +98,12 @@ class Student(db.Model):
     school_id = db.Column(db.String(36), db.ForeignKey("schools.id"), nullable=False, index=True)
     full_name = db.Column(db.String(200), nullable=False)
     student_code = db.Column(db.String(60), nullable=False)
+    address = db.Column(db.String(300), nullable=False, default="")
+    guardian_name = db.Column(db.String(200), nullable=False, default="")
+    guardian_phone = db.Column(db.String(32), nullable=False, default="")
+    guardian_email = db.Column(db.String(320), nullable=False, default="")
+    # Opaque stable identifier for the student's QR card. It contains no PII.
+    qr_token = db.Column(db.String(64), nullable=False, unique=True, default=lambda: secrets.token_urlsafe(24))
     __table_args__ = (db.UniqueConstraint("school_id", "student_code", name="uq_student_school_code"),)
 
 class Teacher(db.Model):
