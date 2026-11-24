@@ -1,8 +1,38 @@
 import click
+import secrets
 from flask.cli import with_appcontext
+from sqlalchemy import inspect, select, text
 from werkzeug.security import generate_password_hash
 from . import db
 from .models import Tenant, User, Membership, School, EducationSystem
+
+@click.command("migrate-student-profiles")
+@with_appcontext
+def migrate_student_profiles():
+    """Add student contact fields and unique opaque QR tokens to an existing staging DB."""
+    from flask import current_app
+    from .models import Student
+    if current_app.config.get("ENVIRONMENT") != "staging":
+        raise click.ClickException("This additive migration is currently restricted to staging.")
+    engine = db.engine
+    columns = {column["name"] for column in inspect(engine).get_columns("students")}
+    additions = {
+        "address": "VARCHAR(300) NOT NULL DEFAULT ''",
+        "guardian_name": "VARCHAR(200) NOT NULL DEFAULT ''",
+        "guardian_phone": "VARCHAR(32) NOT NULL DEFAULT ''",
+        "guardian_email": "VARCHAR(320) NOT NULL DEFAULT ''",
+        "qr_token": "VARCHAR(64)",
+    }
+    with engine.begin() as connection:
+        for name, definition in additions.items():
+            if name not in columns:
+                connection.execute(text(f"ALTER TABLE students ADD COLUMN {name} {definition}"))
+    for student in db.session.scalars(select(Student).where(Student.qr_token.is_(None))).all():
+        student.qr_token = secrets.token_urlsafe(24)
+    db.session.commit()
+    with engine.begin() as connection:
+        connection.execute(text("CREATE UNIQUE INDEX IF NOT EXISTS uq_students_qr_token ON students (qr_token)"))
+    click.echo("Student profile columns and unique QR tokens are ready.")
 
 @click.command("bootstrap-demo")
 @click.option("--email", required=True)

@@ -67,3 +67,47 @@
 .notification-empty strong{color:#334d6b}
 .notification-empty p{font-size:12px}
 @media(max-width:650px){.notification-center{padding:16px}.notification-card{flex-wrap:wrap}.notification-card>button{margin-right:55px}.role-session{justify-content:flex-start}}
+
+/* Consistent controls and student records for daily school administration */
+.live-panel input,.live-panel select,.live-panel textarea{width:100%;min-height:44px;padding:9px 12px;border:1px solid #d7e0ea;border-radius:9px;background:#fff;color:#203650;font-size:14px;line-height:1.5;box-shadow:none}
+.live-panel select{appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%236b7e95' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:left 12px center;padding-left:38px}
+.live-panel input:focus,.live-panel select:focus,.live-panel textarea:focus{border-color:#7f9fc7;box-shadow:0 0 0 3px #dce9f8;outline:none}
+.live-panel button{min-height:40px;font-size:13px;line-height:1.4}
+.live-panel label{min-width:0}
+.live-form{width:100%;max-width:none;gap:14px}
+.student-form{padding:20px;border:1px solid #e5ebf3;border-radius:14px;background:#f9fbfe}
+.student-form h3{margin:0;color:#1a3455}
+.student-form-note{margin:0;font-size:12px!important;line-height:1.8}
+.student-form-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px 16px}
+.student-form-grid label{margin:0}
+.student-list-tools{display:flex;align-items:end;justify-content:space-between;gap:16px;margin:14px 0}
+.student-list-tools label{width:min(100%,460px);margin:0}
+.student-list-tools>span{padding:10px 13px;border-radius:9px;background:#f1f5fa;color:#546981;font-size:12px;white-space:nowrap}
+.student-cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:13px}
+.student-record{min-width:0;padding:16px;border:1px solid #e3eaf2;border-radius:13px;background:#fff}
+.student-record-head{display:flex;align-items:center;gap:11px;min-width:0}
+.student-avatar{display:grid;place-items:center;width:43px;height:43px;flex:0 0 auto;border-radius:12px;background:#edf3fa;color:#28517d;font-weight:800;font-size:18px}
+.student-record-head>div{min-width:0;display:grid;gap:4px}
+.student-record-head strong{overflow-wrap:anywhere;color:#203954;font-size:14px}
+.student-record-head small{color:#7c8ca0;font-size:11px}
+.student-record-meta{display:grid;grid-template-columns:72px minmax(0,1fr);gap:7px 10px;margin:15px 0;color:#718198;font-size:11px}
+.student-record-meta strong{min-width:0;overflow-wrap:anywhere;color:#334b67;font-size:12px;font-weight:600}
+.student-record-actions{display:flex;gap:7px;flex-wrap:wrap;padding-top:12px;border-top:1px solid #edf1f5}
+.student-record-actions button{min-height:35px;padding:7px 10px;background:#f3f6fa;color:#29496c;border-color:#dfe7f0;font-size:11px}
+.student-record-actions .student-delete{background:#fff5f4;color:#a33c36;border-color:#f2d6d3}
+.student-record-actions .student-delete:disabled{opacity:.5}
+.student-modal-backdrop{position:fixed;inset:0;z-index:100;display:grid;place-items:center;padding:18px;background:#10233d99}
+.student-modal{width:min(680px,100%);max-height:92dvh;overflow:auto;padding:22px;border-radius:17px;background:#fff;box-shadow:0 24px 80px #0d203d40}
+.student-modal-heading{display:flex;justify-content:space-between;gap:14px;align-items:flex-start;padding-bottom:16px;border-bottom:1px solid #e9eef4}
+.student-modal-heading span{font-size:11px;color:#7c8ca0}.student-modal-heading h3{margin:4px 0 0;color:#1c3554}
+.student-modal-heading button{width:36px;padding:0;border-color:#e0e7ef;background:#f6f8fb;color:#425a74;font-size:22px}
+.student-profile-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;margin:16px 0}
+.student-profile-grid>div{min-width:0;display:grid;gap:5px;padding:12px;border:1px solid #e8edf3;border-radius:10px;background:#fafbfd}
+.student-profile-grid span{color:#8290a2;font-size:11px}.student-profile-grid strong{overflow-wrap:anywhere;color:#2a405b;font-size:13px;font-weight:600}
+.student-qr-block{display:flex;align-items:center;gap:18px;padding:16px;border:1px solid #e4eaf1;border-radius:13px;background:#f9fbfe}
+.student-qr-block svg{flex:0 0 auto;max-width:100%;height:auto;background:white;padding:8px;border-radius:9px}
+.student-qr-block>div{min-width:0}.student-qr-block strong{color:#213a59;font-size:13px}.student-qr-block p{margin:6px 0;line-height:1.8}.student-qr-block code{display:block;direction:ltr;overflow-wrap:anywhere;font-size:10px;color:#58708a}
+.student-modal-actions{display:flex;justify-content:flex-start;gap:8px;margin-top:16px}
+@media(max-width:1050px){.student-cards{grid-template-columns:repeat(2,minmax(0,1fr))}}
+@media(max-width:650px){.live-panel{padding:15px}.student-form{padding:14px}.student-form-grid,.student-profile-grid{grid-template-columns:1fr}.student-cards{grid-template-columns:1fr}.student-list-tools{align-items:stretch;flex-direction:column}.student-list-tools>span{align-self:flex-start}.student-qr-block{align-items:flex-start;flex-direction:column}.student-modal{padding:16px}.student-modal-actions{flex-direction:column}.student-modal-actions button{width:100%}}
+@media print{body *{visibility:hidden!important}.student-modal,.student-modal *{visibility:visible!important}.student-modal-backdrop{position:absolute;inset:0;padding:0;background:#fff}.student-modal{width:100%;max-height:none;overflow:visible;border:0;box-shadow:none}.student-modal-heading button,.student-modal-actions{display:none!important}.student-qr-block{break-inside:avoid}}
