@@ -17,6 +17,9 @@ def create_app(test_config=None):
         SESSION_COOKIE_HTTPONLY=True,
         SESSION_COOKIE_SAMESITE="Lax",
         SESSION_COOKIE_SECURE=os.getenv("COOKIE_SECURE", "false").lower() == "true",
+        VAPID_PUBLIC_KEY=os.getenv("VAPID_PUBLIC_KEY", ""),
+        VAPID_PRIVATE_KEY=os.getenv("VAPID_PRIVATE_KEY", ""),
+        VAPID_CLAIMS_SUB=os.getenv("VAPID_CLAIMS_SUB", ""),
     )
     if test_config:
         app.config.update(test_config)
@@ -34,7 +37,7 @@ def create_app(test_config=None):
     from .notifications import notifications
     from .homework import homework
     from .cli import bootstrap_demo, bootstrap_staging, create_staging_owner
-    from .communication_cli import init_communication_tables
+    from .communication_cli import init_communication_tables, deliver_push_notifications
     app.register_blueprint(api)
     app.register_blueprint(academics)
     app.register_blueprint(portals)
@@ -46,6 +49,7 @@ def create_app(test_config=None):
     app.cli.add_command(bootstrap_staging)
     app.cli.add_command(create_staging_owner)
     app.cli.add_command(init_communication_tables)
+    app.cli.add_command(deliver_push_notifications)
 
     @app.before_request
     def csrf_protection():

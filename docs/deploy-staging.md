@@ -15,6 +15,7 @@ python3 -c 'import secrets; print(secrets.token_hex(32))'
 docker compose -f compose.staging.yml build
 docker compose -f compose.staging.yml run --rm schoolcloud python staging_init.py
 docker compose -f compose.staging.yml up -d
+docker compose -f compose.staging.yml exec schoolcloud flask --app wsgi init-communication-tables
 curl -fsS http://127.0.0.1:8088/api/health
 ```
 
@@ -29,6 +30,7 @@ The CLI's `bootstrap-demo` is development-only. Do not enable it in a public sta
 ```bash
 git pull --ff-only origin develop
 docker compose -f compose.staging.yml up -d --build
+docker compose -f compose.staging.yml exec schoolcloud flask --app wsgi init-communication-tables
 ```
 
 Do not run `docker compose down -v` unless you intentionally want to destroy the staging database.

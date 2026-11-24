@@ -36,4 +36,4 @@ npm run dev
 - POST /api/schools (name; owner role; X-CSRF-Token required)
 - GET /api/subscription
 
-The current frontend is a standalone UI preview, not wired to these endpoints. Never use production or real student data with this prototype.
+The frontend is connected to a subset of these APIs. UI coverage and remaining preview-only screens are listed in `docs/architecture/ui-coverage.md`. Never use production or real student data with this staging prototype.

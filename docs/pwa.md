@@ -1,6 +1,6 @@
 # SchoolCloud PWA and responsive UI
 
-The app includes a Web App Manifest, install control, PNG icons generated during the frontend build, and a small service worker. API requests are **never cached**. Offline support is limited to the app shell and previously fetched static assets; login, records, and school data require connectivity.
+The app includes a Web App Manifest, install control, PNG icons generated during the frontend build, and a service worker that caches the app shell and same-origin static assets. API requests are **never cached**. Login, records, and school data require connectivity. Web Push setup, delivery, device behavior and configuration are documented in [pwa-notifications.md](pwa-notifications.md).
 
 ## Deploy the update to staging
 

@@ -10,15 +10,10 @@ import OwnerDashboard from "./OwnerDashboard";
 import SubscriptionPanel from "./SubscriptionPanel";
 import SchoolQrPanel from "./SchoolQrPanel";
 import { api, type SessionInfo, type MembershipInfo } from "../services/api";
+import { canAccessPage } from "../access";
 import "./academic.css";
 
 const names: Record<string,string> = {owner:"مدير النظام",principal:"إدارة المدرسة",registrar:"المعاون / شؤون الطلبة",teacher:"المدرس",student:"الطالب",parent:"ولي الأمر"};
-const allowed: Record<string,string[]> = {
- owner:["overview","schools","subscriptions","accounts"],
- principal:["overview","accounts","students","teachers","classes","onboarding","attendance","learning"],
- registrar:["overview","accounts","students","classes","onboarding","attendance","learning"],
- teacher:["overview","profile","learning","homework"], student:["overview","attendance","learning","homework"],parent:["overview","attendance","learning","homework"]
-};
 export default function RolePortal({page, onRole, onNavigate}: {page:string;onRole?:(role:string)=>void;onNavigate?:(page:string)=>void}) {
  const [session,setSession]=useState<SessionInfo|null>(null);
  const [loading,setLoading]=useState(true);
@@ -86,7 +81,7 @@ export default function RolePortal({page, onRole, onNavigate}: {page:string;onRo
  </section>;
  if(needsSelection && members.length>1) return <section className="live-panel"><h2>اختر الحساب والمدرسة</h2>{members.map(m=><button style={{margin:6}} disabled={busy} key={m.id} onClick={()=>select(m)}>{names[m.role]||m.role} — {m.school_id||"جميع المدارس"}</button>)}{error&&<p role="alert">{error}</p>}</section>;
  const role=session.role;
- const permitted=page==="notifications"||(allowed[role]||["overview"]).includes(page);
+ const permitted=canAccessPage(role,page);
  return <div className="role-portal">
   <NotificationVoiceListener/>
   <div className="role-session" aria-label="الحساب الحالي"><span>{names[role]||role}</span><strong>{session.user.email}</strong><button onClick={async()=>{try{await api.logout();}finally{setSession(null);setMembers([]);setSchools([]);setProfile(null);setChildren([]);setNeedsSelection(false);onRole?.("");}}}>تسجيل الخروج</button></div>

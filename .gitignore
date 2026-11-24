@@ -6,6 +6,9 @@ __pycache__/
 instance/
 node_modules/
 dist/
+frontend/tsconfig.tsbuildinfo
+frontend/public/icons/icon-192.png
+frontend/public/icons/icon-512.png
 
 .env.staging
 .env.production

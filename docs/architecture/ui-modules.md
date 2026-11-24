@@ -1,22 +1,23 @@
 # UI modules — phase 1
 
-The React UI provides Arabic RTL role previews for platform administrator, school administrator, teacher, parent and student.
+The React interface is Arabic RTL and has distinct owner, principal, registrar, teacher, student and parent navigation. `frontend/src/access.ts` is the shared source for visible links and client-side page checks. It is a usability guard only; Flask endpoint decorators and tenant-scoped queries must remain the authorization boundary.
 
-## Preview-only functionality
-- Sidebar navigation and responsive mobile drawer
-- Overview cards and timetable day switching
-- Tables, client-side search, local record creation
-- Parent child selector
-- School settings fields
+## Shared layout
 
-No UI data is persisted. No authentication or authorization is enforced by this preview. The UI must not be deployed with real school data until API authorization and tenant isolation are implemented.
+- Responsive sidebar drawer with keyboard close, active-page state and a mobile overlay.
+- Sticky workspace header with install control and unread notification shortcut.
+- Shared notification state for the unread badge, inbox and optional voice readout; this avoids separate polling loops in each component.
+- Notification preferences for browser push are attached to the signed-in tenant and account.
+
+## Persisted and preview modules
+
+The frontend connects to authenticated APIs for a subset of school, account, academic, attendance, homework and notification operations. Other dashboards and records remain previews or are incomplete; consult `ui-coverage.md` before treating a screen as a production workflow. Do not import real student records into this staging version.
 
 ## Next implementation milestones
-1. PostgreSQL migration, tenant-scoped foreign keys and RLS policies
-2. Authentication, sessions, CSRF and authorization
-3. CRUD APIs with pagination, validation and audit logs
-4. React Query API integration and typed client
-5. File uploads with private object storage
-6. Grades approval/publication workflow and guardian verification
-7. Subscription billing and payment verification
-8. Integration tests and security review
+
+1. Versioned database migrations and tenant-scoped database constraints/RLS.
+2. Complete backend authorization review and endpoint-level audit coverage.
+3. Pagination, consistent validation/errors, audit logs and operational monitoring.
+4. Complete persisted student, teacher, family, timetable, exams and grades workflows.
+5. Private file storage, account recovery, guardian verification and subscription billing.
+6. Integration and accessibility checks across phone, tablet and desktop.
